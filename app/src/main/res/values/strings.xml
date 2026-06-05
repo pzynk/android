@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Sync</string>
+    <string name="discovery_title">Sync — Desktop Discovery</string>
+    <string name="discovery_searching">Searching for desktop on local network…</string>
+</resources>
