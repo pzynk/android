@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Sync</string>
-    <string name="discovery_title">Sync</string>
+    <string name="app_name">Pzync</string>
+    <string name="discovery_title">Pzync</string>
     <string name="discovery_searching">Scanning for devices on local network…</string>
     <string name="btn_start_scan">Start Scan</string>
     <string name="btn_stop_scan">Stop Scan</string>
@@ -14,6 +14,9 @@
     <string name="offline">Offline</string>
     <string name="quick_actions">Quick Actions</string>
     <string name="battery_opt_warning_title">Battery Optimization Active</string>
-    <string name="battery_opt_warning_message">Battery optimization may cause frequent disconnects. Disable it to keep Sync reliably connected in the background.</string>
+    <string name="battery_opt_warning_message">Battery optimization may cause frequent disconnects. Disable it to keep Pzync reliably connected in the background.</string>
     <string name="battery_opt_disable_btn">Disable Battery Optimization</string>
+    <string name="quick_action_ai_agent">AI Agent</string>
+    <string name="quick_action_ai_agent_desc">Use voice commands to control desktop</string>
+    <string name="beta">BETA</string>
 </resources>

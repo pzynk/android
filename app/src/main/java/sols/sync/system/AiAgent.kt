@@ -174,12 +174,15 @@ class AiAgent(private val context: Context, private val deviceId: String) {
             }
         }
         
+        val prefs = context.getSharedPreferences("ai_prefs", Context.MODE_PRIVATE)
+        val selectedModel = prefs.getString("selected_model", "gemini-3.1-flash-lite") ?: "gemini-3.1-flash-lite"
+        
         val model = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-            modelName = "gemini-3.1-flash-lite",
+            modelName = selectedModel,
             tools = listOf(Tool.functionDeclarations(declarations))
         )
         chatSession = model.startChat()
-        sendMessage(ChatMessage(ChatMessageType.SYSTEM, "AI initialized with native desktop tools."))
+        sendMessage(ChatMessage(ChatMessageType.SYSTEM, "AI initialized with native desktop tools. Model: $selectedModel"))
     }
 
     private fun handleOutput(text: String) {

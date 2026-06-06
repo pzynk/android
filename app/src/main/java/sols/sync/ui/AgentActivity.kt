@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import sols.sync.R
@@ -49,6 +50,10 @@ class AgentActivity : AppCompatActivity() {
             insets
         }
 
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        toolbar.setNavigationOnClickListener { finish() }
+
         tvStatus = findViewById(R.id.tv_status)
         rvChat = findViewById(R.id.rv_chat)
         fabMic = findViewById(R.id.fab_mic)
@@ -67,6 +72,30 @@ class AgentActivity : AppCompatActivity() {
         }
 
         setupSpeechRecognizer()
+
+        findViewById<android.widget.Button>(R.id.btn_change_model).setOnClickListener {
+            val models = arrayOf(
+                "gemini-3.1-flash-lite",
+                "gemini-flash-lite-latest",
+                "gemini-2.5-flash-lite",
+                "gemini-3.5-flash",
+                "gemini-3-flash-preview",
+                "gemini-flash-latest",
+                "gemini-2.5-flash"
+            )
+            val prefs = getSharedPreferences("ai_prefs", android.content.Context.MODE_PRIVATE)
+            val currentModel = prefs.getString("selected_model", "gemini-3.1-flash-lite")
+            val checkedItem = models.indexOf(currentModel).takeIf { it >= 0 } ?: 0
+
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Select Model")
+                .setSingleChoiceItems(models, checkedItem) { dialog, which ->
+                    prefs.edit().putString("selected_model", models[which]).apply()
+                    android.widget.Toast.makeText(this, "Model selected: ${models[which]}. Reconnect to apply.", android.widget.Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                .show()
+        }
 
         fabMic.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -97,11 +126,13 @@ class AgentActivity : AppCompatActivity() {
                 tvStatus.text = "Processing voice..."
                 isListening = false
                 fabMic.alpha = 1.0f
+                fabMic.setImageResource(R.drawable.ic_mic)
             }
             override fun onError(error: Int) {
                 tvStatus.text = "Tap Mic to Speak"
                 isListening = false
                 fabMic.alpha = 1.0f
+                fabMic.setImageResource(R.drawable.ic_mic)
             }
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -114,6 +145,7 @@ class AgentActivity : AppCompatActivity() {
                 tvStatus.text = "Tap Mic to Speak"
                 isListening = false
                 fabMic.alpha = 1.0f
+                fabMic.setImageResource(R.drawable.ic_mic)
             }
             override fun onPartialResults(partialResults: Bundle?) {}
             override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -125,6 +157,7 @@ class AgentActivity : AppCompatActivity() {
             speechRecognizer.stopListening()
             isListening = false
             fabMic.alpha = 1.0f
+            fabMic.setImageResource(R.drawable.ic_mic)
             tvStatus.text = "Tap Mic to Speak"
         } else {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -134,6 +167,7 @@ class AgentActivity : AppCompatActivity() {
             speechRecognizer.startListening(intent)
             isListening = true
             fabMic.alpha = 0.5f
+            fabMic.setImageResource(R.drawable.ic_mic_off)
             tvStatus.text = "Initializing... "
         }
     }
