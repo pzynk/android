@@ -16,7 +16,4 @@
     <string name="battery_opt_warning_title">Battery Optimization Active</string>
     <string name="battery_opt_warning_message">Battery optimization may cause frequent disconnects. Disable it to keep Pzync reliably connected in the background.</string>
     <string name="battery_opt_disable_btn">Disable Battery Optimization</string>
-    <string name="quick_action_ai_agent">AI Agent</string>
-    <string name="quick_action_ai_agent_desc">Use voice commands to control desktop</string>
-    <string name="beta">BETA</string>
 </resources>

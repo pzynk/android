@@ -167,19 +167,7 @@ class DeviceDetailActivity : AppCompatActivity() {
             }
         }
 
-        // AI Agent
-        findViewById<android.view.View>(R.id.btn_quick_action_ai_agent).setOnClickListener {
-            val app = applicationContext as SyncApp
-            val state = app.deviceStates[deviceId] ?: "Disconnected"
-            val info = app.terminalInfos[deviceId]
-            if (state == "Connected" && info?.enabled == true) {
-                Intent(this, AgentActivity::class.java).apply {
-                    putExtra(AgentActivity.EXTRA_DEVICE_ID, deviceId)
-                }.let { startActivity(it) }
-            } else {
-                android.widget.Toast.makeText(this, "Connect device and enable terminal access first.", android.widget.Toast.LENGTH_SHORT).show()
-            }
-        }
+
 
         btnUnpair.setOnClickListener { confirmUnpair(deviceId) }
     }

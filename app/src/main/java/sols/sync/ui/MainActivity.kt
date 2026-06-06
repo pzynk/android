@@ -293,17 +293,10 @@ class MainActivity : AppCompatActivity() {
     private fun openBatteryOptimizationSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                 startActivity(intent)
             } catch (e: Exception) {
-                // Fallback: open general battery optimization list
-                try {
-                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                } catch (ignored: Exception) {
-                    // Device doesn't support this settings screen at all
-                }
+                // Device doesn't support this settings screen at all
             }
         }
     }

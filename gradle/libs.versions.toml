@@ -13,7 +13,6 @@ androidxMedia = "1.7.0"
 coil = "2.5.0"
 googleGmsGoogleServices = "4.4.4"
 firebaseAnalytics = "23.2.0"
-firebaseAi = "17.12.1"
 kotlinxSerializationJson = "1.6.3"
 
 [libraries]
@@ -29,7 +28,6 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 androidx-media = { group = "androidx.media", name = "media", version.ref = "androidxMedia" }
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics", version.ref = "firebaseAnalytics" }
-firebase-ai = { group = "com.google.firebase", name = "firebase-ai", version.ref = "firebaseAi" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
 [plugins]
