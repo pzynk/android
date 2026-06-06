@@ -62,6 +62,8 @@ class SyncService : Service() {
         const val EXTRA_FILE_URI = "file_uri"
         const val ACTION_UPDATE_VOLUME_SYNC = "sols.sync.ACTION_UPDATE_VOLUME_SYNC"
         const val ACTION_CANCEL_SEND = "sols.sync.ACTION_CANCEL_SEND"
+        const val ACTION_CONNECT_DEVICE = "sols.sync.ACTION_CONNECT_DEVICE"
+        const val ACTION_UNPAIR_DEVICE = "sols.sync.ACTION_UNPAIR_DEVICE"
         private const val CHANNEL_ID = "sync_service_channel"
         private const val MEDIA_CHANNEL_ID = "sync_media_channel"
         private const val UPLOAD_CHANNEL_ID = "sync_upload_channel"
@@ -121,8 +123,13 @@ class SyncService : Service() {
             if (isAutoSyncEnabled) {
                 if (clipboardManager.hasPrimaryClip()) {
                     val text = clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
-                    if (text != null && text != lastReceivedClipboard) {
-                        connector.sendClipboard(text)
+                    if (text != null) {
+                        val normalizedText = text.replace("\r\n", "\n")
+                        val normalizedLast = lastReceivedClipboard?.replace("\r\n", "\n")
+                        if (normalizedText != normalizedLast) {
+                            lastReceivedClipboard = text
+                            connector.sendClipboard(text)
+                        }
                     }
                 }
             }
@@ -136,7 +143,30 @@ class SyncService : Service() {
             ACTION_SEND_CLIPBOARD -> {
                 val text = intent.getStringExtra(EXTRA_CLIPBOARD_TEXT)
                 if (text != null) {
+                    lastReceivedClipboard = text
                     connector.sendClipboard(text)
+                }
+                return START_STICKY
+            }
+            ACTION_CONNECT_DEVICE -> {
+                val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+                if (deviceId != null) {
+                    val app = application as SyncApp
+                    val device = app.discoveredCache[deviceId]
+                    if (device != null) {
+                        Thread {
+                            connector.connect(device)
+                        }.start()
+                    }
+                }
+                return START_STICKY
+            }
+            ACTION_UNPAIR_DEVICE -> {
+                val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+                if (deviceId != null) {
+                    Thread {
+                        connector.unpair(deviceId)
+                    }.start()
                 }
                 return START_STICKY
             }

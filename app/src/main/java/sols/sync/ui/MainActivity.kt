@@ -258,6 +258,18 @@ class MainActivity : AppCompatActivity() {
                     iconView.imageTintList = null
                 }
                 
+                itemView.setOnClickListener {
+                    val intent = Intent(this, SyncService::class.java).apply {
+                        action = SyncService.ACTION_CONNECT_DEVICE
+                        putExtra(SyncService.EXTRA_DEVICE_ID, d.deviceId)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent)
+                    } else {
+                        startService(intent)
+                    }
+                }
+                
                 discoveredContainer.addView(itemView)
             }
         }

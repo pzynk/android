@@ -136,6 +136,19 @@ class SyncConnector(
         connecting.remove(device.deviceId)
     }
 
+    fun unpair(deviceId: String) {
+        val payload = ClientMessage.Unpair.toJson()
+        val tcp = activeConnections[deviceId]
+        if (tcp != null) {
+            ioPool.execute {
+                tcp.writeLine(payload)
+                try { Thread.sleep(100) } catch (_: Exception) {}
+                tcp.close()
+            }
+        }
+        trustedPeers.remove(deviceId)
+    }
+
     fun sendClipboard(text: String) {
         val payload = ClientMessage.ClipboardUpdate(text).toJson()
         activeConnections.values.forEach { tcp ->
@@ -205,6 +218,12 @@ class SyncConnector(
                     is ServerMessage.TerminalServerInfo -> {
                         listener(Event.TerminalAccessUpdated(device, msg.enabled, msg.port, msg.username, msg.password))
                     }
+                    is ServerMessage.Unpair -> {
+                        Log.i(TAG, "Received Unpair from desktop")
+                        trustedPeers.remove(device.deviceId)
+                        tcp.close()
+                        break
+                    }
                     else -> {
                         Log.d(TAG, "Received message from desktop: $line")
                     }
@@ -222,7 +241,7 @@ class SyncConnector(
     private fun shouldConnect(deviceId: String, paired: Boolean): Boolean {
         if (connecting.contains(deviceId)) return false
         if (activeConnections[deviceId]?.isConnected == true) return false
-        return paired || pairAttempted.add(deviceId)
+        return paired
     }
 
     private fun newIoPool(): ExecutorService {

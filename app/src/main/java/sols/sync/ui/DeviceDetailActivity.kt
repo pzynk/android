@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
@@ -268,7 +269,15 @@ class DeviceDetailActivity : AppCompatActivity() {
             .setTitle(R.string.unpair_confirm_title)
             .setMessage(R.string.unpair_confirm_message)
             .setPositiveButton(R.string.confirm) { _, _ ->
-                trustedPeersStore.remove(deviceId)
+                val intent = Intent(this, SyncService::class.java).apply {
+                    action = SyncService.ACTION_UNPAIR_DEVICE
+                    putExtra(SyncService.EXTRA_DEVICE_ID, deviceId)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
                 setResult(RESULT_OK)
                 finish()
             }

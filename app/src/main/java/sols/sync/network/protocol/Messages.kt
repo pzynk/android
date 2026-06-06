@@ -30,6 +30,8 @@ sealed class ClientMessage {
         val totalBytes: Long,
     ) : ClientMessage()
 
+    object Unpair : ClientMessage()
+
     fun toJson(): String {
         val json = JSONObject()
         when (this) {
@@ -65,6 +67,9 @@ sealed class ClientMessage {
                 json.put("filename", filename)
                 json.put("total_bytes", totalBytes)
             }
+            is Unpair -> {
+                json.put("type", "Unpair")
+            }
         }
         return json.toString()
     }
@@ -95,6 +100,8 @@ sealed class ServerMessage {
         val lengthUs: Long,
         val player: String
     ) : ServerMessage()
+
+    object Unpair : ServerMessage()
  
     companion object {
         fun parse(line: String): ServerMessage? {
@@ -138,6 +145,7 @@ sealed class ServerMessage {
                         lengthUs = json.optLong("length_us", 0),
                         player = json.optString("player", "")
                     )
+                    "Unpair" -> Unpair
                     else -> null
                 }
             } catch (_: Exception) {
