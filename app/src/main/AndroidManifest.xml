@@ -3,16 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
+        android:name=".SyncApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sync">
@@ -26,6 +33,86 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.DeviceDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.ClipboardActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.DeviceDetailActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.TerminalActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.DeviceDetailActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.ReceivedFilesActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.MediaControlActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <service
+            android:name=".system.SyncService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <activity
+            android:name=".ui.SendClipboardActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity
+            android:name=".ui.ShareActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:theme="@style/Theme.Sync.Translucent">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".system.ClipboardTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_clipboard"
+            android:label="Send Clipboard"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".ui.AgentActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

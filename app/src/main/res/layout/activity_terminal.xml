@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/terminal_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="#121212">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:elevation="0dp"
+        android:background="#1E1E1E">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Terminal Access"
+            app:titleTextColor="#FFFFFF"
+            app:navigationIcon="?attr/homeAsUpIndicator"
+            app:navigationIconTint="#FFFFFF" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Monospace Console Output ScrollView -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/console_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#181818"
+            android:padding="12dp"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_console_output"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textIsSelectable="true"
+                    android:text="Connecting to terminal...\n" />
+
+                <!-- Inline Prompt and Command Input Area -->
+                <LinearLayout
+                    android:id="@+id/ll_input_line"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tv_current_prompt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#00E676"
+                        android:fontFamily="monospace"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:text="user@host:~$ " />
+
+                    <EditText
+                        android:id="@+id/et_command_input"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="monospace"
+                        android:textSize="13sp"
+                        android:hint="type command..."
+                        android:textColorHint="#555555"
+                        android:imeOptions="actionSend"
+                        android:inputType="textNoSuggestions"
+                        android:singleLine="true"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- Command Helper Toolbar (Tab, Ctrl+C, Ctrl+D, Esc, Up, Down) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#1E1E1E"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_tab"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="TAB"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_ctrl_c"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1.2"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="Ctrl+C"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_ctrl_d"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1.2"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="Ctrl+D"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_esc"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="ESC"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_up"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="▲"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_key_down"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="▼"
+                android:textColor="#E0E0E0"
+                android:textSize="11sp"
+                app:backgroundTint="#2D2D2D" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

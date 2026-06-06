@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lucide: download (replaces stat_sys_download for receive files) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:pathData="M12 15V3"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M7 10L12 15 17 10"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M3 19h18"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

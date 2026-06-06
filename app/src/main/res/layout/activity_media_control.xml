@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/media_control_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="Media Control" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Album Art Placeholder -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="32dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:alpha="0.2" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Player Name Badge -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_player"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="No Player Active"
+            app:chipBackgroundColor="?attr/colorPrimaryContainer"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            app:chipStrokeWidth="0dp" />
+
+        <!-- Title and Artist -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Not Playing"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tv_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="—"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Seek Bar (Read-only for now) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="32dp"
+            android:gravity="center_vertical">
+            
+            <TextView
+                android:id="@+id/tv_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_progress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="8dp"
+                android:enabled="false"
+                android:valueFrom="0.0"
+                android:valueTo="100.0"
+                android:value="0.0" />
+
+            <TextView
+                android:id="@+id/tv_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- Controls -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_prev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_skip_back"
+                app:tint="?attr/colorOnSecondaryContainer"
+                app:backgroundTint="?attr/colorSecondaryContainer"
+                app:elevation="0dp"
+                android:layout_marginEnd="24dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_play_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_play"
+                app:tint="?attr/colorOnPrimaryContainer"
+                app:backgroundTint="?attr/colorPrimaryContainer"
+                app:fabCustomSize="72dp"
+                app:maxImageSize="36dp"
+                app:elevation="0dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_skip_forward"
+                app:tint="?attr/colorOnSecondaryContainer"
+                app:backgroundTint="?attr/colorSecondaryContainer"
+                app:elevation="0dp"
+                android:layout_marginStart="24dp" />
+
+        </LinearLayout>
+
+        <!-- Volume -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/iv_vol_down"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_volume_off"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:padding="4dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_volume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="8dp"
+                android:valueFrom="0.0"
+                android:valueTo="1.0"
+                android:value="0.5" />
+
+            <ImageView
+                android:id="@+id/iv_vol_up"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_volume_up"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:padding="4dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

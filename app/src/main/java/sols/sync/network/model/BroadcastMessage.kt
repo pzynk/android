@@ -15,6 +15,10 @@ data class BroadcastMessage(
     val name: String,
     /** TCP port to connect to for the sync session. */
     val port: Int,
+    /** Stable non-secret UUID advertised by the desktop. */
+    val deviceId: String,
+    /** Operating system of the broadcasting device. */
+    val os: String = "unknown",
 ) {
     companion object {
         /** Parse a JSON payload received over UDP. Returns null on malformed input. */
@@ -25,6 +29,8 @@ data class BroadcastMessage(
                     ip = json.getString("ip"),
                     name = json.getString("name"),
                     port = json.getInt("port"),
+                    deviceId = json.optString("device_id", json.optString("deviceId")),
+                    os = json.optString("os", "unknown"),
                 )
             } catch (_: Exception) {
                 null

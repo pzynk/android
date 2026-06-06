@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme — Material3 Dynamic Color on API 31+ -->
+    <style name="Base.Theme.Sync" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.Sync" parent="Base.Theme.Sync" />
+
+    <style name="Theme.Sync.Translucent" parent="Theme.Sync">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+</resources>

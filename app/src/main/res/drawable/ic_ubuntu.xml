@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Orange background circle -->
+    <path
+        android:fillColor="#E95420"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-12S17.52,2 12,2z"/>
+    
+    <!-- White Circle of Friends ring -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,12m-3.8,0a3.8,3.8 0,1,0 7.6,0a3.8,3.8 0,1,0 -7.6,0" />
+    
+    <!-- Inner orange cutout -->
+    <path
+        android:fillColor="#E95420"
+        android:pathData="M12,12m-2.4,0a2.4,2.4 0,1,0 4.8,0a2.4,2.4 0,1,0 -2.4,0" />
+
+    <!-- Left head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6.8,12m-1.1,0a1.1,1.1 0,1,0 2.2,0a1.1,1.1 0,1,0 -2.2,0" />
+    
+    <!-- Top-right head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14.6,7.5m-1.1,0a1.1,1.1 0,1,0 2.2,0a1.1,1.1 0,1,0 -2.2,0" />
+    
+    <!-- Bottom-right head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14.6,16.5m-1.1,0a1.1,1.1 0,1,0 2.2,0a1.1,1.1 0,1,0 -2.2,0" />
+
+    <!-- Left gap (horizontal) -->
+    <path
+        android:fillColor="#E95420"
+        android:pathData="M6.2,11.3h2.8v1.4H6.2z" />
+    
+    <!-- Top-right gap -->
+    <path
+        android:fillColor="#E95420"
+        android:pathData="M12.6,10.9l2.2,-1.3l0.7,1.2l-2.2,1.3z" />
+    
+    <!-- Bottom-right gap -->
+    <path
+        android:fillColor="#E95420"
+        android:pathData="M12.6,13.1l2.2,1.3l0.7,-1.2l-2.2,-1.3z" />
+</vector>

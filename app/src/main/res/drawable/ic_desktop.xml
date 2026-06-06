@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lucide: monitor (replaces ic_desktop) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <!-- rect width="20" height="14" x="2" y="3" rx="2" -->
+    <path
+        android:pathData="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- line x1="8" x2="16" y1="21" y2="21" -->
+    <path
+        android:pathData="M8 21H16"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- line x1="12" x2="12" y1="17" y2="21" -->
+    <path
+        android:pathData="M12 17V21"
+        android:strokeWidth="2"
+        android:strokeColor="#FF000000"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

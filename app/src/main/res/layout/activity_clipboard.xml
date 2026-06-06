@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/clipboard_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Clipboard Sync"
+            app:navigationIcon="?attr/homeAsUpIndicator" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switch_auto_sync"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Toggle Auto Clipboard Sync"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send_clipboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send Current Android Clipboard to Desktop" />
+            
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
