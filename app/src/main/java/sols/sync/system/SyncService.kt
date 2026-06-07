@@ -43,6 +43,7 @@ class SyncService : Service() {
     
     private var activeMediaDeviceId: String? = null
     private var volumeProvider: androidx.media.VolumeProviderCompat? = null
+    private var lastKnownDesktopVolume: Double? = null
 
     @Volatile
     private var cancelUpload = false
@@ -259,6 +260,9 @@ class SyncService : Service() {
                 app.deviceStates[event.device.deviceId] = "Connected"
                 activeMediaDeviceId = event.device.deviceId
                 systemVolumeSessionCompat?.isActive = isVolumeSyncEnabled()
+                // Bind VolumeProviderCompat immediately so hardware volume keys work
+                // right away, before the desktop sends its first SystemVolumeUpdate.
+                updateSystemVolumeCompat(lastKnownDesktopVolume ?: 0.5)
                 if (event.pairedBefore) {
                     "Connected to ${event.device.name}"
                 } else {
@@ -277,6 +281,7 @@ class SyncService : Service() {
                 app.deviceStates[event.device.deviceId] = "Disconnected"
                 systemVolumeSessionCompat?.isActive = false
                 volumeProvider = null
+                lastKnownDesktopVolume = null
                 "Failed to connect to ${event.device.name}: ${event.reason}"
             }
             is SyncConnector.Event.ClipboardUpdate -> {
@@ -315,6 +320,7 @@ class SyncService : Service() {
             }
             is SyncConnector.Event.SystemVolumeUpdate -> {
                 activeMediaDeviceId = event.device.deviceId
+                lastKnownDesktopVolume = event.volume
                 updateSystemVolumeCompat(event.volume)
                 return // Do not update status notification
             }

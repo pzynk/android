@@ -88,7 +88,7 @@ class MediaControlActivity : AppCompatActivity() {
 
         sliderVolume.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                sendCommand("SetVolume", value.toDouble())
+                sendCommand("SetSystemVolume", value.toDouble())
             }
         }
 
