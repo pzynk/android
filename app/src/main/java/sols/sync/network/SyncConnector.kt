@@ -55,6 +55,8 @@ class SyncConnector(
             val username: String,
             val password: String?
         ) : Event()
+        object StartCameraStream : Event()
+        object StopCameraStream : Event()
     }
 
     private val appContext = context.applicationContext
@@ -167,6 +169,25 @@ class SyncConnector(
         }
     }
 
+    fun sendCameraStreamStarted(port: Int, useAdb: Boolean) {
+        val payload = ClientMessage.CameraStreamStarted(port, useAdb).toJson()
+        activeConnections.values.forEach { tcp ->
+            ioPool.execute {
+                tcp.writeLine(payload)
+            }
+        }
+    }
+
+
+    fun sendCameraStreamStopped() {
+        val payload = ClientMessage.CameraStreamStopped.toJson()
+        activeConnections.values.forEach { tcp ->
+            ioPool.execute {
+                tcp.writeLine(payload)
+            }
+        }
+    }
+
     fun sendFile(deviceId: String, filename: String, base64Data: String, sha256: String): Boolean {
         val filePayload = ClientMessage.IncomingFile(filename, base64Data, sha256).toJson()
         val startPayload = ClientMessage.FileTransferStart(filename, filePayload.length.toLong()).toJson()
@@ -217,6 +238,12 @@ class SyncConnector(
                     }
                     is ServerMessage.TerminalServerInfo -> {
                         listener(Event.TerminalAccessUpdated(device, msg.enabled, msg.port, msg.username, msg.password))
+                    }
+                    is ServerMessage.StartCameraStream -> {
+                        listener(Event.StartCameraStream)
+                    }
+                    is ServerMessage.StopCameraStream -> {
+                        listener(Event.StopCameraStream)
                     }
                     is ServerMessage.Unpair -> {
                         Log.i(TAG, "Received Unpair from desktop")

@@ -60,6 +60,8 @@ class DeviceDetailActivity : AppCompatActivity() {
         uri?.let { handleSelectedFile(it) }
     }
 
+
+
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             updateUi()
@@ -168,6 +170,17 @@ class DeviceDetailActivity : AppCompatActivity() {
             }
         }
 
+        // Camera Stream
+        findViewById<android.view.View>(R.id.btn_quick_action_camera).setOnClickListener {
+            val app = applicationContext as SyncApp
+            val state = app.deviceStates[deviceId] ?: "Disconnected"
+            if (state == "Connected") {
+                CameraStreamActivity.start(this, deviceId)
+            } else {
+                android.widget.Toast.makeText(this, "Device is not connected", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
 
         btnUnpair.setOnClickListener { confirmUnpair(deviceId) }
@@ -216,6 +229,20 @@ class DeviceDetailActivity : AppCompatActivity() {
             } else {
                 tvTerminalStatus.text = "Disabled on desktop"
             }
+        }
+
+        val btnCamera = findViewById<android.view.View>(R.id.btn_quick_action_camera)
+        val tvCameraStatus = findViewById<TextView>(R.id.tv_camera_status)
+        if (state == "Connected") {
+            btnCamera.alpha = 1.0f
+            if (app.isCameraStreaming) {
+                tvCameraStatus.text = "Streaming on port ${app.cameraStreamingPort} • Tap to configure / stop"
+            } else {
+                tvCameraStatus.text = "Tap to configure or start camera stream"
+            }
+        } else {
+            btnCamera.alpha = 0.5f
+            tvCameraStatus.text = "Offline"
         }
     }
 
@@ -302,4 +329,6 @@ class DeviceDetailActivity : AppCompatActivity() {
         }
         startService(intent)
     }
+
+
 }

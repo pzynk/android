@@ -45,6 +45,8 @@ class SyncService : Service() {
     private var volumeProvider: androidx.media.VolumeProviderCompat? = null
     private var lastKnownDesktopVolume: Double? = null
 
+    private var cameraServer: CameraStreamServer? = null
+
     @Volatile
     private var cancelUpload = false
     private val sendQueue = java.util.concurrent.LinkedBlockingQueue<SendFileTask>()
@@ -65,6 +67,8 @@ class SyncService : Service() {
         const val ACTION_CANCEL_SEND = "sols.sync.ACTION_CANCEL_SEND"
         const val ACTION_CONNECT_DEVICE = "sols.sync.ACTION_CONNECT_DEVICE"
         const val ACTION_UNPAIR_DEVICE = "sols.sync.ACTION_UNPAIR_DEVICE"
+        const val ACTION_START_CAMERA_STREAM = "sols.sync.ACTION_START_CAMERA_STREAM"
+        const val ACTION_STOP_CAMERA_STREAM = "sols.sync.ACTION_STOP_CAMERA_STREAM"
         private const val CHANNEL_ID = "sync_service_channel"
         private const val MEDIA_CHANNEL_ID = "sync_media_channel"
         private const val UPLOAD_CHANNEL_ID = "sync_upload_channel"
@@ -171,6 +175,14 @@ class SyncService : Service() {
                 }
                 return START_STICKY
             }
+            ACTION_START_CAMERA_STREAM -> {
+                startCameraStream()
+                return START_STICKY
+            }
+            ACTION_STOP_CAMERA_STREAM -> {
+                stopCameraStream()
+                return START_STICKY
+            }
             ACTION_SET_AUTO_SYNC -> {
                 isAutoSyncEnabled = intent.getBooleanExtra(EXTRA_AUTO_SYNC, false)
                 getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
@@ -231,6 +243,7 @@ class SyncService : Service() {
     }
 
     override fun onDestroy() {
+        stopCameraStream()
         connector.stop()
         mediaSessionCompat?.release()
         systemVolumeSessionCompat?.release()
@@ -241,6 +254,57 @@ class SyncService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null // We are a started service, not a bound service
+    }
+
+    private fun startCameraStream() {
+        if (cameraServer != null) return
+        val prefs = getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+        val isFront = prefs.getBoolean("camera_facing_front", false)
+        val resolutionStr = prefs.getString("camera_resolution", "640x480") ?: "640x480"
+        val parts = resolutionStr.split("x")
+        val width = parts.getOrNull(0)?.toIntOrNull() ?: 640
+        val height = parts.getOrNull(1)?.toIntOrNull() ?: 480
+        val fps = prefs.getInt("camera_fps", 30)
+        val rotation = prefs.getInt("camera_rotation", 0)
+        val useAdb = prefs.getString("camera_connection_mode", "wifi") == "adb"
+
+        val server = CameraStreamServer(
+            context = this,
+            isFrontCamera = isFront,
+            width = width,
+            height = height,
+            targetFps = fps,
+            rotation = rotation,
+            onStarted = { port ->
+                val app = application as SyncApp
+                app.isCameraStreaming = true
+                app.cameraStreamingPort = port
+                connector.sendCameraStreamStarted(port, useAdb)
+                val statusMsg = if (useAdb) {
+                    "Camera streaming active via ADB on port $port"
+                } else {
+                    "Camera streaming active on port $port"
+                }
+                updateNotification(statusMsg)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
+            },
+            onStopped = {
+                val app = application as SyncApp
+                app.isCameraStreaming = false
+                app.cameraStreamingPort = 0
+                connector.sendCameraStreamStopped()
+                updateNotification("Sync Active")
+                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
+            }
+        )
+        cameraServer = server
+        server.start()
+    }
+
+
+    private fun stopCameraStream() {
+        cameraServer?.stop()
+        cameraServer = null
     }
 
     private fun handleConnectorEvent(event: SyncConnector.Event) {
@@ -278,11 +342,20 @@ class SyncService : Service() {
                 "Pairing rejected by ${event.device.name}: ${event.reason}"
             }
             is SyncConnector.Event.ConnectFailed -> {
+                stopCameraStream()
                 app.deviceStates[event.device.deviceId] = "Disconnected"
                 systemVolumeSessionCompat?.isActive = false
                 volumeProvider = null
                 lastKnownDesktopVolume = null
                 "Failed to connect to ${event.device.name}: ${event.reason}"
+            }
+            is SyncConnector.Event.StartCameraStream -> {
+                startCameraStream()
+                return
+            }
+            is SyncConnector.Event.StopCameraStream -> {
+                stopCameraStream()
+                return
             }
             is SyncConnector.Event.ClipboardUpdate -> {
                 if (isAutoSyncEnabled) {
@@ -396,7 +469,30 @@ class SyncService : Service() {
     }
     
     private fun updateNotification(content: String) {
-        notificationManager.notify(NOTIFICATION_ID, createNotification(content))
+        val notification = createNotification(content)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val app = application as? SyncApp
+            val isCameraActive = app?.isCameraStreaming == true
+            var type = 0
+            if (Build.VERSION.SDK_INT >= 34) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            }
+            if (isCameraActive) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+            try {
+                if (type != 0) {
+                    startForeground(NOTIFICATION_ID, notification, type)
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SyncService", "Failed to startForeground with type $type", e)
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
     private fun saveReceivedFile(filename: String, base64Data: String, expectedSha256: String) {

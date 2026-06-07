@@ -24,6 +24,9 @@ class SyncApp : Application() {
     /** Application-level cache of terminal information for devices. */
     val terminalInfos = ConcurrentHashMap<String, TerminalInfo>()
 
+    var isCameraStreaming = false
+    var cameraStreamingPort = 0
+
     override fun onCreate() {
         super.onCreate()
         // Apply Material You wallpaper-based dynamic color on Android 12+

@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -54,6 +57,11 @@
         <activity
             android:name=".ui.MediaControlActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.CameraStreamActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.DeviceDetailActivity"
+            android:windowSoftInputMode="adjustResize" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -68,7 +76,7 @@
         <service
             android:name=".system.SyncService"
             android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
+            android:foregroundServiceType="connectedDevice|camera" />
 
         <activity
             android:name=".ui.SendClipboardActivity"
