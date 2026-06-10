@@ -48,6 +48,7 @@ class PairingSession(
             }
             is ServerMessage.ClipboardUpdate -> Result.Failed("Unexpected ClipboardUpdate")
             is ServerMessage.IncomingFile -> Result.Failed("Unexpected IncomingFile")
+            is ServerMessage.FileTransferStart -> Result.Failed("Unexpected FileTransferStart")
             is ServerMessage.MediaState -> Result.Failed("Unexpected MediaState")
             is ServerMessage.SystemVolumeUpdate -> Result.Failed("Unexpected SystemVolumeUpdate")
             is ServerMessage.TerminalServerInfo -> Result.Failed("Unexpected TerminalServerInfo")
@@ -79,6 +80,7 @@ class PairingSession(
             is ServerMessage.PairRequired -> Result.Failed("Desktop requested pairing again")
             is ServerMessage.ClipboardUpdate -> Result.Failed("Unexpected ClipboardUpdate")
             is ServerMessage.IncomingFile -> Result.Failed("Unexpected IncomingFile")
+            is ServerMessage.FileTransferStart -> Result.Failed("Unexpected FileTransferStart")
             is ServerMessage.MediaState -> Result.Failed("Unexpected MediaState")
             is ServerMessage.SystemVolumeUpdate -> Result.Failed("Unexpected SystemVolumeUpdate")
             is ServerMessage.TerminalServerInfo -> Result.Failed("Unexpected TerminalServerInfo")

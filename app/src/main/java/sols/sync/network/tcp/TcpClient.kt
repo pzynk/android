@@ -142,6 +142,89 @@ class TcpClient : Closeable {
         }
     }
 
+    fun readIncomingFileStreaming(
+        totalBytes: Long,
+        onProgress: (bytesRead: Long) -> Unit,
+        onWriteBytes: (bytes: ByteArray, length: Int) -> Unit
+    ): String? {
+        val r = reader ?: return null
+        try {
+            // 1. Read until we find `"base64_data":"`
+            val target = "\"base64_data\":\""
+            var targetIdx = 0
+            var totalRead = 0L
+            
+            while (targetIdx < target.length) {
+                val c = r.read()
+                if (c == -1) return null
+                totalRead++
+                if (c.toChar() == target[targetIdx]) {
+                    targetIdx++
+                } else {
+                    targetIdx = if (c.toChar() == target[0]) 1 else 0
+                }
+            }
+            
+            // 2. Read base64 data until we see the ending `"`
+            val charBuf = CharArray(4096)
+            var charBufLen = 0
+            
+            while (true) {
+                val c = r.read()
+                if (c == -1) return null
+                totalRead++
+                val ch = c.toChar()
+                if (ch == '"') {
+                    break;
+                }
+                
+                if (ch.isLetterOrDigit() || ch == '+' || ch == '/' || ch == '=') {
+                    charBuf[charBufLen++] = ch
+                    if (charBufLen == charBuf.size) {
+                        val base64Str = String(charBuf, 0, charBufLen)
+                        val decoded = android.util.Base64.decode(base64Str, android.util.Base64.NO_WRAP)
+                        onWriteBytes(decoded, decoded.size)
+                        charBufLen = 0
+                        onProgress(totalRead)
+                    }
+                }
+            }
+            
+            if (charBufLen > 0) {
+                val base64Str = String(charBuf, 0, charBufLen)
+                val decoded = android.util.Base64.decode(base64Str, android.util.Base64.NO_WRAP)
+                onWriteBytes(decoded, decoded.size)
+                onProgress(totalRead)
+            }
+            
+            // 3. Read suffix until `\n`
+            val suffixBuilder = StringBuilder()
+            while (true) {
+                val c = r.read()
+                if (c == -1) break
+                totalRead++
+                val ch = c.toChar()
+                if (ch == '\n') break
+                suffixBuilder.append(ch)
+            }
+            
+            val suffix = suffixBuilder.toString()
+            val shaKey = "\"sha256\":\""
+            val shaIdx = suffix.indexOf(shaKey)
+            if (shaIdx != -1) {
+                val start = shaIdx + shaKey.length
+                val end = suffix.indexOf("\"", start)
+                if (end != -1) {
+                    return suffix.substring(start, end)
+                }
+            }
+            return ""
+        } catch (e: Exception) {
+            Log.e("TcpClient", "Error in readIncomingFileStreaming", e)
+            return null
+        }
+    }
+
     val isConnected: Boolean get() = socket?.isConnected == true && socket?.isClosed == false
 
     override fun close() {

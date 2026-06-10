@@ -93,6 +93,7 @@ sealed class ServerMessage {
     data class PairRejected(val reason: String) : ServerMessage()
     data class ClipboardUpdate(val text: String) : ServerMessage()
     data class IncomingFile(val filename: String, val base64Data: String, val sha256: String) : ServerMessage()
+    data class FileTransferStart(val filename: String, val totalBytes: Long) : ServerMessage()
     data class SystemVolumeUpdate(val volume: Double, val muted: Boolean) : ServerMessage()
     data class TerminalServerInfo(
         val enabled: Boolean,
@@ -137,6 +138,10 @@ sealed class ServerMessage {
                         filename = json.getString("filename"),
                         base64Data = json.getString("base64_data"),
                         sha256 = json.getString("sha256")
+                    )
+                    "FileTransferStart" -> FileTransferStart(
+                        filename = json.getString("filename"),
+                        totalBytes = json.getLong("total_bytes")
                     )
                     "SystemVolumeUpdate" -> SystemVolumeUpdate(
                         volume = json.optDouble("volume", 1.0),

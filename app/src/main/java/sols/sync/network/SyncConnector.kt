@@ -43,6 +43,9 @@ class SyncConnector(
         data class ClipboardUpdate(val device: BroadcastMessage, val text: String) : Event()
         /** Emitted when desktop sends a file. */
         data class FileReceived(val device: BroadcastMessage, val filename: String, val base64Data: String, val sha256: String) : Event()
+        data class FileTransferStarted(val device: BroadcastMessage, val filename: String, val totalBytes: Long) : Event()
+        data class FileTransferProgress(val device: BroadcastMessage, val filename: String, val bytesReceived: Long, val totalBytes: Long) : Event()
+        data class FileTransferFinished(val device: BroadcastMessage, val filename: String, val success: Boolean) : Event()
         /** Emitted when the desktop sends media state. */
         data class MediaStateUpdate(val device: BroadcastMessage, val state: ServerMessage.MediaState) : Event()
         /** Emitted when the desktop sends system volume update. */
@@ -229,6 +232,82 @@ class SyncConnector(
                     }
                     is ServerMessage.IncomingFile -> {
                         listener(Event.FileReceived(device, msg.filename, msg.base64Data, msg.sha256))
+                    }
+                    is ServerMessage.FileTransferStart -> {
+                        val receiveEnabled = appContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+                            .getBoolean("receive_files_enabled", true)
+                        
+                        if (!receiveEnabled) {
+                            tcp.readIncomingFileStreaming(msg.totalBytes, {}, { _, _ -> })
+                        } else {
+                            listener(Event.FileTransferStarted(device, msg.filename, msg.totalBytes))
+                            
+                            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                            
+                            var file = java.io.File(downloadsDir, msg.filename)
+                            var count = 1
+                            val nameWithoutExt = file.nameWithoutExtension
+                            val ext = file.extension.let { if (it.isNotEmpty()) ".$it" else "" }
+                            while (file.exists()) {
+                                file = java.io.File(downloadsDir, "${nameWithoutExt}_${count}${ext}")
+                                count++
+                            }
+                            
+                            val stat = android.os.StatFs(downloadsDir.absolutePath)
+                            val bytesAvailable = stat.availableBlocksLong * stat.blockSizeLong
+                            if (bytesAvailable < msg.totalBytes) {
+                                tcp.readIncomingFileStreaming(msg.totalBytes, {}, { _, _ -> })
+                                listener(Event.FileTransferFinished(device, file.name, false))
+                                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                    android.widget.Toast.makeText(appContext, "Not enough disk space to receive ${msg.filename}", android.widget.Toast.LENGTH_LONG).show()
+                                }
+                            } else {
+                                var success = false
+                                var outputStream: java.io.FileOutputStream? = null
+                                val digest = java.security.MessageDigest.getInstance("SHA-256")
+                                try {
+                                    val out = java.io.FileOutputStream(file)
+                                    outputStream = out
+                                    var lastPercent = -1
+                                    
+                                    val receivedSha256 = tcp.readIncomingFileStreaming(
+                                        msg.totalBytes,
+                                        onProgress = { readBytes ->
+                                            val pct = ((readBytes * 100) / msg.totalBytes).toInt()
+                                            if (pct != lastPercent) {
+                                                lastPercent = pct
+                                                listener(Event.FileTransferProgress(device, file.name, readBytes, msg.totalBytes))
+                                            }
+                                        },
+                                        onWriteBytes = { bytes, len ->
+                                            out.write(bytes, 0, len)
+                                            digest.update(bytes, 0, len)
+                                        }
+                                    )
+                                    out.close()
+                                    outputStream = null
+                                    
+                                    if (receivedSha256 != null) {
+                                        val computedSha256 = digest.digest().joinToString("") { "%02x".format(it) }
+                                        if (computedSha256.equals(receivedSha256, ignoreCase = true)) {
+                                            success = true
+                                            sols.sync.ui.ReceivedFilesActivity.addReceivedFile(appContext, file.absolutePath)
+                                        } else {
+                                            Log.w("SyncConnector", "SHA-256 mismatch for received file: expected $receivedSha256, got $computedSha256")
+                                            file.delete()
+                                        }
+                                    } else {
+                                        file.delete()
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("SyncConnector", "Error receiving file streamingly", e)
+                                    outputStream?.close()
+                                    file.delete()
+                                }
+                                listener(Event.FileTransferFinished(device, file.name, success))
+                            }
+                        }
                     }
                     is ServerMessage.MediaState -> {
                         listener(Event.MediaStateUpdate(device, msg))

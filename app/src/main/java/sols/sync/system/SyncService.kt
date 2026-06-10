@@ -377,6 +377,25 @@ class SyncService : Service() {
                     return // File receiving is disabled, ignore
                 }
             }
+            is SyncConnector.Event.FileTransferStarted -> {
+                showDownloadProgressNotification(event.filename, 0, true)
+                "Downloading: ${event.filename}"
+            }
+            is SyncConnector.Event.FileTransferProgress -> {
+                val pct = ((event.bytesReceived * 100) / event.totalBytes).toInt()
+                showDownloadProgressNotification(event.filename, pct, false)
+                return // Do not update main status notification during active transfer
+            }
+            is SyncConnector.Event.FileTransferFinished -> {
+                dismissDownloadNotification()
+                if (event.success) {
+                    val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                    showFileReceivedNotification(java.io.File(downloadsDir, event.filename))
+                    "Received file: ${event.filename}"
+                } else {
+                    "Failed to receive file: ${event.filename}"
+                }
+            }
             is SyncConnector.Event.MediaStateUpdate -> {
                 app.mediaStates[event.device.deviceId] = event.state
                 activeMediaDeviceId = event.device.deviceId
@@ -897,6 +916,22 @@ class SyncService : Service() {
     }
 
     private fun dismissUploadNotification() {
+        notificationManager.cancel(UPLOAD_NOTIFICATION_ID)
+    }
+
+    private fun showDownloadProgressNotification(filename: String, progressPercent: Int, isIndeterminate: Boolean) {
+        val notification = NotificationCompat.Builder(this, UPLOAD_CHANNEL_ID)
+            .setContentTitle("Downloading: $filename")
+            .setContentText("Receiving file...")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setOngoing(true)
+            .setProgress(100, progressPercent, isIndeterminate)
+            .setOnlyAlertOnce(true)
+            .build()
+        notificationManager.notify(UPLOAD_NOTIFICATION_ID, notification)
+    }
+
+    private fun dismissDownloadNotification() {
         notificationManager.cancel(UPLOAD_NOTIFICATION_ID)
     }
 
