@@ -15,8 +15,8 @@ android {
         applicationId = "sols.sync"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.2"
+        versionCode = 5
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
