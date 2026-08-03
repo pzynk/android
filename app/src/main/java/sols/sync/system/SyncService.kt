@@ -46,6 +46,7 @@ class SyncService : Service() {
     private var lastKnownDesktopVolume: Double? = null
 
     private var cameraServer: CameraStreamServer? = null
+    private var audioPlayer: android.media.MediaPlayer? = null
 
     @Volatile
     private var cancelUpload = false
@@ -69,6 +70,8 @@ class SyncService : Service() {
         const val ACTION_UNPAIR_DEVICE = "sols.sync.ACTION_UNPAIR_DEVICE"
         const val ACTION_START_CAMERA_STREAM = "sols.sync.ACTION_START_CAMERA_STREAM"
         const val ACTION_STOP_CAMERA_STREAM = "sols.sync.ACTION_STOP_CAMERA_STREAM"
+        const val ACTION_START_AUDIO_STREAM = "sols.sync.ACTION_START_AUDIO_STREAM"
+        const val ACTION_STOP_AUDIO_STREAM = "sols.sync.ACTION_STOP_AUDIO_STREAM"
         private const val CHANNEL_ID = "sync_service_channel"
         private const val MEDIA_CHANNEL_ID = "sync_media_channel"
         private const val UPLOAD_CHANNEL_ID = "sync_upload_channel"
@@ -183,6 +186,21 @@ class SyncService : Service() {
                 stopCameraStream()
                 return START_STICKY
             }
+            ACTION_START_AUDIO_STREAM -> {
+                val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+                if (deviceId != null) {
+                    connector.sendAudioStreamRequest(deviceId, true)
+                }
+                return START_STICKY
+            }
+            ACTION_STOP_AUDIO_STREAM -> {
+                val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+                if (deviceId != null) {
+                    connector.sendAudioStreamRequest(deviceId, false)
+                    stopAudioStream()
+                }
+                return START_STICKY
+            }
             ACTION_SET_AUTO_SYNC -> {
                 isAutoSyncEnabled = intent.getBooleanExtra(EXTRA_AUTO_SYNC, false)
                 getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
@@ -244,6 +262,7 @@ class SyncService : Service() {
 
     override fun onDestroy() {
         stopCameraStream()
+        stopAudioStream()
         connector.stop()
         mediaSessionCompat?.release()
         systemVolumeSessionCompat?.release()
@@ -289,12 +308,7 @@ class SyncService : Service() {
                 LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
             },
             onStopped = {
-                val app = application as SyncApp
-                app.isCameraStreaming = false
-                app.cameraStreamingPort = 0
-                connector.sendCameraStreamStopped()
-                updateNotification("Sync Active")
-                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
+                stopCameraStream()
             }
         )
         cameraServer = server
@@ -305,6 +319,39 @@ class SyncService : Service() {
     private fun stopCameraStream() {
         cameraServer?.stop()
         cameraServer = null
+    }
+
+    private fun startAudioStream(ip: String, port: Int) {
+        stopAudioStream()
+        try {
+            audioPlayer = android.media.MediaPlayer().apply {
+                setDataSource("http://$ip:$port/")
+                setAudioAttributes(
+                    android.media.AudioAttributes.Builder()
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
+                setOnPreparedListener { it.start() }
+                setOnErrorListener { _, _, _ ->
+                    stopAudioStream()
+                    true
+                }
+                prepareAsync()
+            }
+            updateNotification("Streaming audio from desktop")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncService", "Failed to start audio stream", e)
+        }
+    }
+
+    private fun stopAudioStream() {
+        try {
+            audioPlayer?.stop()
+            audioPlayer?.release()
+        } catch (_: Exception) {}
+        audioPlayer = null
+        updateNotification("Sync Active")
     }
 
     private fun handleConnectorEvent(event: SyncConnector.Event) {
@@ -355,6 +402,14 @@ class SyncService : Service() {
             }
             is SyncConnector.Event.StopCameraStream -> {
                 stopCameraStream()
+                return
+            }
+            is SyncConnector.Event.AudioStreamInfo -> {
+                if (event.enabled) {
+                    startAudioStream(event.device.ip, event.port)
+                } else {
+                    stopAudioStream()
+                }
                 return
             }
             is SyncConnector.Event.ClipboardUpdate -> {

@@ -181,6 +181,18 @@ class DeviceDetailActivity : AppCompatActivity() {
             }
         }
 
+        // Listen Through Mobile toggle
+        val switchAudioStream = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switch_audio_stream)
+        switchAudioStream.isChecked = prefs.getBoolean("audio_stream_enabled_$deviceId", false)
+        switchAudioStream.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("audio_stream_enabled_$deviceId", isChecked).apply()
+            val intent = Intent(this, SyncService::class.java).apply {
+                action = if (isChecked) SyncService.ACTION_START_AUDIO_STREAM else SyncService.ACTION_STOP_AUDIO_STREAM
+                putExtra(SyncService.EXTRA_DEVICE_ID, deviceId)
+            }
+            startService(intent)
+        }
+
 
 
         btnUnpair.setOnClickListener { confirmUnpair(deviceId) }

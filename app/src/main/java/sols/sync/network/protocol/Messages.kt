@@ -33,6 +33,7 @@ sealed class ClientMessage {
     object Unpair : ClientMessage()
     data class CameraStreamStarted(val port: Int, val useAdb: Boolean = false) : ClientMessage()
     object CameraStreamStopped : ClientMessage()
+    data class AudioStreamRequest(val start: Boolean) : ClientMessage()
 
     fun toJson(): String {
         val json = JSONObject()
@@ -80,6 +81,10 @@ sealed class ClientMessage {
             is CameraStreamStopped -> {
                 json.put("type", "CameraStreamStopped")
             }
+            is AudioStreamRequest -> {
+                json.put("type", "AudioStreamRequest")
+                json.put("start", start)
+            }
         }
         return json.toString()
     }
@@ -116,6 +121,7 @@ sealed class ServerMessage {
     object Unpair : ServerMessage()
     object StartCameraStream : ServerMessage()
     object StopCameraStream : ServerMessage()
+    data class AudioStreamInfo(val enabled: Boolean, val port: Int) : ServerMessage()
  
     companion object {
         fun parse(line: String): ServerMessage? {
@@ -166,6 +172,10 @@ sealed class ServerMessage {
                     "Unpair" -> Unpair
                     "StartCameraStream" -> StartCameraStream
                     "StopCameraStream" -> StopCameraStream
+                    "AudioStreamInfo" -> AudioStreamInfo(
+                        enabled = json.getBoolean("enabled"),
+                        port = json.getInt("port")
+                    )
                     else -> null
                 }
             } catch (_: Exception) {

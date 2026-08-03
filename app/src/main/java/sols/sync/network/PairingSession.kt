@@ -54,6 +54,7 @@ class PairingSession(
             is ServerMessage.TerminalServerInfo -> Result.Failed("Unexpected TerminalServerInfo")
             is ServerMessage.StartCameraStream -> Result.Failed("Unexpected StartCameraStream")
             is ServerMessage.StopCameraStream -> Result.Failed("Unexpected StopCameraStream")
+            is ServerMessage.AudioStreamInfo -> Result.Failed("Unexpected AudioStreamInfo")
             is ServerMessage.Unpair -> Result.Failed("Unexpected Unpair")
             null -> Result.Failed("Desktop closed the connection")
         }
@@ -86,6 +87,7 @@ class PairingSession(
             is ServerMessage.TerminalServerInfo -> Result.Failed("Unexpected TerminalServerInfo")
             is ServerMessage.StartCameraStream -> Result.Failed("Unexpected StartCameraStream")
             is ServerMessage.StopCameraStream -> Result.Failed("Unexpected StopCameraStream")
+            is ServerMessage.AudioStreamInfo -> Result.Failed("Unexpected AudioStreamInfo")
             is ServerMessage.Unpair -> Result.Failed("Unexpected Unpair")
             null -> Result.Failed("Desktop closed before pairing completed")
         }

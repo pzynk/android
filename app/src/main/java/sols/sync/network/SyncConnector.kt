@@ -60,6 +60,7 @@ class SyncConnector(
         ) : Event()
         object StartCameraStream : Event()
         object StopCameraStream : Event()
+        data class AudioStreamInfo(val device: BroadcastMessage, val enabled: Boolean, val port: Int) : Event()
     }
 
     private val appContext = context.applicationContext
@@ -185,6 +186,15 @@ class SyncConnector(
     fun sendCameraStreamStopped() {
         val payload = ClientMessage.CameraStreamStopped.toJson()
         activeConnections.values.forEach { tcp ->
+            ioPool.execute {
+                tcp.writeLine(payload)
+            }
+        }
+    }
+
+    fun sendAudioStreamRequest(deviceId: String, start: Boolean) {
+        val payload = ClientMessage.AudioStreamRequest(start).toJson()
+        activeConnections[deviceId]?.let { tcp ->
             ioPool.execute {
                 tcp.writeLine(payload)
             }
@@ -323,6 +333,9 @@ class SyncConnector(
                     }
                     is ServerMessage.StopCameraStream -> {
                         listener(Event.StopCameraStream)
+                    }
+                    is ServerMessage.AudioStreamInfo -> {
+                        listener(Event.AudioStreamInfo(device, msg.enabled, msg.port))
                     }
                     is ServerMessage.Unpair -> {
                         Log.i(TAG, "Received Unpair from desktop")
