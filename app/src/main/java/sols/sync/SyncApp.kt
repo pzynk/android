@@ -26,6 +26,8 @@ class SyncApp : Application() {
 
     var isCameraStreaming = false
     var cameraStreamingPort = 0
+    var isMicStreaming = false
+    var micStreamingPort = 0
 
     override fun onCreate() {
         super.onCreate()

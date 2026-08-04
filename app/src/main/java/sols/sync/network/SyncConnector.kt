@@ -60,6 +60,8 @@ class SyncConnector(
         ) : Event()
         object StartCameraStream : Event()
         object StopCameraStream : Event()
+        object StartMicStream : Event()
+        object StopMicStream : Event()
         data class AudioStreamInfo(val device: BroadcastMessage, val enabled: Boolean, val port: Int) : Event()
     }
 
@@ -164,6 +166,15 @@ class SyncConnector(
         }
     }
 
+    fun sendClipboardImage(base64Data: String) {
+        val payload = ClientMessage.ClipboardImage(base64Data).toJson()
+        activeConnections.values.forEach { tcp ->
+            ioPool.execute {
+                tcp.writeLine(payload)
+            }
+        }
+    }
+
     fun sendMediaCommand(deviceId: String, command: String, value: Double? = null) {
         val payload = ClientMessage.MediaCommand(command, value).toJson()
         activeConnections[deviceId]?.let { tcp ->
@@ -173,23 +184,28 @@ class SyncConnector(
         }
     }
 
-    fun sendCameraStreamStarted(port: Int, useAdb: Boolean) {
+    fun sendCameraStreamStarted(port: Int, useAdb: Boolean = false): Boolean {
         val payload = ClientMessage.CameraStreamStarted(port, useAdb).toJson()
-        activeConnections.values.forEach { tcp ->
-            ioPool.execute {
-                tcp.writeLine(payload)
-            }
-        }
+        val active = activeConnections.values.firstOrNull() ?: return false
+        return active.writeLine(payload)
     }
 
-
-    fun sendCameraStreamStopped() {
+    fun sendCameraStreamStopped(): Boolean {
         val payload = ClientMessage.CameraStreamStopped.toJson()
-        activeConnections.values.forEach { tcp ->
-            ioPool.execute {
-                tcp.writeLine(payload)
-            }
-        }
+        val active = activeConnections.values.firstOrNull() ?: return false
+        return active.writeLine(payload)
+    }
+
+    fun sendMicStreamStarted(port: Int, sampleRate: Int = 44100, channels: Int = 1, useAdb: Boolean = false): Boolean {
+        val payload = ClientMessage.MicStreamStarted(port, sampleRate, channels, useAdb).toJson()
+        val active = activeConnections.values.firstOrNull() ?: return false
+        return active.writeLine(payload)
+    }
+
+    fun sendMicStreamStopped(): Boolean {
+        val payload = ClientMessage.MicStreamStopped.toJson()
+        val active = activeConnections.values.firstOrNull() ?: return false
+        return active.writeLine(payload)
     }
 
     fun sendAudioStreamRequest(deviceId: String, start: Boolean) {
@@ -333,6 +349,12 @@ class SyncConnector(
                     }
                     is ServerMessage.StopCameraStream -> {
                         listener(Event.StopCameraStream)
+                    }
+                    is ServerMessage.StartMicStream -> {
+                        listener(Event.StartMicStream)
+                    }
+                    is ServerMessage.StopMicStream -> {
+                        listener(Event.StopMicStream)
                     }
                     is ServerMessage.AudioStreamInfo -> {
                         listener(Event.AudioStreamInfo(device, msg.enabled, msg.port))

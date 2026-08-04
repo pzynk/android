@@ -181,6 +181,17 @@ class DeviceDetailActivity : AppCompatActivity() {
             }
         }
 
+        // Mic Stream
+        findViewById<android.view.View>(R.id.btn_quick_action_mic)?.setOnClickListener {
+            val app = applicationContext as SyncApp
+            val state = app.deviceStates[deviceId] ?: "Disconnected"
+            if (state == "Connected") {
+                MicStreamActivity.start(this, deviceId)
+            } else {
+                android.widget.Toast.makeText(this, "Device is not connected", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Listen Through Mobile toggle
         val switchAudioStream = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switch_audio_stream)
         switchAudioStream.isChecked = prefs.getBoolean("audio_stream_enabled_$deviceId", false)
@@ -191,6 +202,11 @@ class DeviceDetailActivity : AppCompatActivity() {
                 putExtra(SyncService.EXTRA_DEVICE_ID, deviceId)
             }
             startService(intent)
+        }
+        
+        // Open audio settings when tapping the row
+        findViewById<android.view.View>(R.id.btn_quick_action_audio_stream).setOnClickListener {
+            AudioSettingsActivity.start(this, deviceId)
         }
 
 

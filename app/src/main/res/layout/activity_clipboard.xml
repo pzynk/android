@@ -31,6 +31,14 @@
             android:layout_height="wrap_content"
             android:text="Toggle Auto Clipboard Sync"
             android:textSize="16sp"
+            android:layout_marginBottom="16dp"/>
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switch_sync_screenshots"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sync Screenshots to Desktop Clipboard"
+            android:textSize="16sp"
             android:layout_marginBottom="24dp"/>
 
         <com.google.android.material.button.MaterialButton

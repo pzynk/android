@@ -33,7 +33,10 @@ sealed class ClientMessage {
     object Unpair : ClientMessage()
     data class CameraStreamStarted(val port: Int, val useAdb: Boolean = false) : ClientMessage()
     object CameraStreamStopped : ClientMessage()
+    data class MicStreamStarted(val port: Int, val sampleRate: Int = 44100, val channels: Int = 1, val useAdb: Boolean = false) : ClientMessage()
+    object MicStreamStopped : ClientMessage()
     data class AudioStreamRequest(val start: Boolean) : ClientMessage()
+    data class ClipboardImage(val base64Data: String) : ClientMessage()
 
     fun toJson(): String {
         val json = JSONObject()
@@ -53,6 +56,10 @@ sealed class ClientMessage {
             is ClipboardUpdate -> {
                 json.put("type", "ClipboardUpdate")
                 json.put("text", text)
+            }
+            is ClipboardImage -> {
+                json.put("type", "ClipboardImage")
+                json.put("base64_data", base64Data)
             }
             is MediaCommand -> {
                 json.put("type", "MediaCommand")
@@ -80,6 +87,16 @@ sealed class ClientMessage {
             }
             is CameraStreamStopped -> {
                 json.put("type", "CameraStreamStopped")
+            }
+            is MicStreamStarted -> {
+                json.put("type", "MicStreamStarted")
+                json.put("port", port)
+                json.put("sample_rate", sampleRate)
+                json.put("channels", channels)
+                json.put("use_adb", useAdb)
+            }
+            is MicStreamStopped -> {
+                json.put("type", "MicStreamStopped")
             }
             is AudioStreamRequest -> {
                 json.put("type", "AudioStreamRequest")
@@ -121,8 +138,10 @@ sealed class ServerMessage {
     object Unpair : ServerMessage()
     object StartCameraStream : ServerMessage()
     object StopCameraStream : ServerMessage()
+    object StartMicStream : ServerMessage()
+    object StopMicStream : ServerMessage()
     data class AudioStreamInfo(val enabled: Boolean, val port: Int) : ServerMessage()
- 
+
     companion object {
         fun parse(line: String): ServerMessage? {
             return try {
@@ -172,6 +191,8 @@ sealed class ServerMessage {
                     "Unpair" -> Unpair
                     "StartCameraStream" -> StartCameraStream
                     "StopCameraStream" -> StopCameraStream
+                    "StartMicStream" -> StartMicStream
+                    "StopMicStream" -> StopMicStream
                     "AudioStreamInfo" -> AudioStreamInfo(
                         enabled = json.getBoolean("enabled"),
                         port = json.getInt("port")
