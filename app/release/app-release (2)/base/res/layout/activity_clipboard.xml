@@ -1,0 +1,53 @@
+
+“
+;
+android*http://schemas.android.com/apk/res/android&
+4
+app'http://schemas.android.com/apk/res-auto&3androidx.coordinatorlayout.widget.CoordinatorLayout"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightmatch_parent"(õ„2:0ÿÿÿÿÿÿÿÿÿ"T
+*http://schemas.android.com/apk/res/androidfitsSystemWindowstrue"(İ„2:@"m
+*http://schemas.android.com/apk/res/androidid@+id/clipboard_root"(Ğ„2
+™ øid/clipboard_root0*Î
+Å/com.google.android.material.appbar.AppBarLayout"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightwrap_content"(õ„2:0şÿÿÿÿÿÿÿÿ*Ì
+Ã2com.google.android.material.appbar.MaterialToolbar"F
+'http://schemas.android.com/apk/res-autotitleClipboard Sync(Š‰Œø"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"}
+*http://schemas.android.com/apk/res/androidlayout_height?attr/actionBarSize"(õ„2"
+ …€Œøattr/actionBarSize0À€"‚
+'http://schemas.android.com/apk/res-autonavigationIcon?attr/homeAsUpIndicator"(Î†Œø2$
+"¢„Œøattr/homeAsUpIndicator0"_
+*http://schemas.android.com/apk/res/androidid@+id/toolbar"(Ğ„2
+¿„ ø
+id/toolbar0<.*
+„LinearLayout"Ÿ
+'http://schemas.android.com/apk/res-autolayout_behavior&@string/appbar_scrolling_view_behavior"(ô„Œø21
+/€Äø%string/appbar_scrolling_view_behavior0"K
+*http://schemas.android.com/apk/res/androidpadding16dp"(Õ„2:h "`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightmatch_parent"(õ„2:0ÿÿÿÿÿÿÿÿÿ"R
+*http://schemas.android.com/apk/res/androidorientationvertical"(Ä„2:0*ø
+ï9com.google.android.material.materialswitch.MaterialSwitch"W
+*http://schemas.android.com/apk/res/androidlayout_marginBottom16dp""(ú„2:h "`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent""(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightwrap_content""(õ„2:0şÿÿÿÿÿÿÿÿ"L
+*http://schemas.android.com/apk/res/androidtextSize16sp""(•„2:h‚ "q
+*http://schemas.android.com/apk/res/androidid@+id/switch_auto_sync""(Ğ„2
+•„ øid/switch_auto_sync0"S
+*http://schemas.android.com/apk/res/androidtextToggle Auto Clipboard Sync(Ï‚„"1*‘
+ˆ9com.google.android.material.materialswitch.MaterialSwitch"W
+*http://schemas.android.com/apk/res/androidlayout_marginBottom24dp"*(ú„2:h0"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"*(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightwrap_content"*(õ„2:0şÿÿÿÿÿÿÿÿ"L
+*http://schemas.android.com/apk/res/androidtextSize16sp"*(•„2:h‚ "
+*http://schemas.android.com/apk/res/androidid@+id/switch_sync_screenshots"*(Ğ„2&
+$™„ øid/switch_sync_screenshots0"^
+*http://schemas.android.com/apk/res/androidtext%Sync Screenshots to Desktop Clipboard(Ï‚„*1*Ü
+Ó1com.google.android.material.button.MaterialButton"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"0(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightwrap_content"0(õ„2:0şÿÿÿÿÿÿÿÿ"u
+*http://schemas.android.com/apk/res/androidid@+id/btn_send_clipboard"0(Ğ„2!
+ü€ øid/btn_send_clipboard0"b
+*http://schemas.android.com/apk/res/androidtext)Send Current Android Clipboard to Desktop(Ï‚„0HF&
