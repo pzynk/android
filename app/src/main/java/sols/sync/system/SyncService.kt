@@ -85,6 +85,8 @@ class SyncService : Service() {
         const val ACTION_START_AUDIO_STREAM = "sols.sync.ACTION_START_AUDIO_STREAM"
         const val ACTION_STOP_AUDIO_STREAM = "sols.sync.ACTION_STOP_AUDIO_STREAM"
         const val ACTION_RESTART_AUDIO_STREAM = "sols.sync.ACTION_RESTART_AUDIO_STREAM"
+        const val ACTION_AUDIO_STREAM_ERROR = "sols.sync.ACTION_AUDIO_STREAM_ERROR"
+        const val EXTRA_ERROR_MESSAGE = "error_message"
         private const val CHANNEL_ID = "sync_service_channel"
         private const val MEDIA_CHANNEL_ID = "sync_media_channel"
         private const val UPLOAD_CHANNEL_ID = "sync_upload_channel"
@@ -391,8 +393,25 @@ class SyncService : Service() {
 
 
     private fun stopCameraStream() {
-        cameraServer?.stop()
+        val app = application as? SyncApp
+        val server = cameraServer
+        if (server == null && app?.isCameraStreaming != true) return
+
         cameraServer = null
+        if (app != null) {
+            app.isCameraStreaming = false
+            app.cameraStreamingPort = 0
+        }
+
+        try {
+            server?.stop()
+        } catch (e: Exception) {
+            android.util.Log.e("SyncService", "Error stopping camera server", e)
+        }
+
+        connector.sendCameraStreamStopped()
+        updateNotification("Connected to desktop")
+        LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
     }
 
     private fun startMicStream() {
@@ -438,14 +457,42 @@ class SyncService : Service() {
     }
 
     private fun stopMicStream() {
-        micServer?.stop()
+        val app = application as? SyncApp
+        val server = micServer
+        if (server == null && app?.isMicStreaming != true) return
+
         micServer = null
-        val app = application as SyncApp
-        app.isMicStreaming = false
-        app.micStreamingPort = 0
+        if (app != null) {
+            app.isMicStreaming = false
+            app.micStreamingPort = 0
+        }
+
+        try {
+            server?.stop()
+        } catch (e: Exception) {
+            android.util.Log.e("SyncService", "Error stopping mic server", e)
+        }
+
         connector.sendMicStreamStopped()
         updateNotification("Connected to desktop")
         LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_STATE_CHANGED))
+    }
+
+    private fun notifyAudioStreamFailure(deviceId: String, errorMessage: String) {
+        val prefs = getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+        val wasEnabled = prefs.getBoolean("audio_stream_enabled_$deviceId", false)
+        prefs.edit().putBoolean("audio_stream_enabled_$deviceId", false).apply()
+        if (!wasEnabled) {
+            return
+        }
+        
+        Handler(Looper.getMainLooper()).post {
+            val intent = Intent(ACTION_AUDIO_STREAM_ERROR).apply {
+                putExtra(EXTRA_DEVICE_ID, deviceId)
+                putExtra(EXTRA_ERROR_MESSAGE, errorMessage)
+            }
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        }
     }
 
     private fun startAudioStream(ip: String, port: Int, deviceId: String) {
@@ -468,19 +515,21 @@ class SyncService : Service() {
                 val responseCode = urlConnection.responseCode
                 if (responseCode != 200) {
                     android.util.Log.e("SyncService", "Audio stream failed with HTTP response code: $responseCode")
+                    notifyAudioStreamFailure(deviceId, "Desktop failed to start audio stream (HTTP $responseCode). Check desktop audio device.")
                     return@Thread
                 }
                 
                 inputStream = urlConnection.inputStream
                 android.util.Log.i("SyncService", "Connected to audio stream, reading WAV header...")
                 
-                // Read and skip the 44-byte WAV header
+                // Read and parse the 44-byte WAV header
                 val header = ByteArray(44)
                 var bytesRead = 0
                 while (bytesRead < 44 && isAudioStreaming) {
                     val read = inputStream.read(header, bytesRead, 44 - bytesRead)
                     if (read == -1) {
                         android.util.Log.e("SyncService", "End of stream reached while reading WAV header")
+                        notifyAudioStreamFailure(deviceId, "Audio stream ended unexpectedly by desktop.")
                         return@Thread
                     }
                     bytesRead += read
@@ -489,10 +538,19 @@ class SyncService : Service() {
                 if (!isAudioStreaming) return@Thread
                 android.util.Log.i("SyncService", "WAV header read. Starting AudioTrack...")
 
-                val sampleRate = 44100
+                val channels = (header[22].toInt() and 0xFF) or ((header[23].toInt() and 0xFF) shl 8)
+                val sampleRate = (header[24].toInt() and 0xFF) or
+                        ((header[25].toInt() and 0xFF) shl 8) or
+                        ((header[26].toInt() and 0xFF) shl 16) or
+                        ((header[27].toInt() and 0xFF) shl 24)
+                val validSampleRate = if (sampleRate in 8000..192000) sampleRate else 44100
+                val channelMask = if (channels == 1) android.media.AudioFormat.CHANNEL_OUT_MONO else android.media.AudioFormat.CHANNEL_OUT_STEREO
+
+                android.util.Log.i("SyncService", "Audio stream format: rate=$validSampleRate, channels=$channels")
+
                 val minBufferSize = android.media.AudioTrack.getMinBufferSize(
-                    sampleRate,
-                    android.media.AudioFormat.CHANNEL_OUT_STEREO,
+                    validSampleRate,
+                    channelMask,
                     android.media.AudioFormat.ENCODING_PCM_16BIT
                 )
 
@@ -506,8 +564,8 @@ class SyncService : Service() {
                     .setAudioFormat(
                         android.media.AudioFormat.Builder()
                             .setEncoding(android.media.AudioFormat.ENCODING_PCM_16BIT)
-                            .setSampleRate(sampleRate)
-                            .setChannelMask(android.media.AudioFormat.CHANNEL_OUT_STEREO)
+                            .setSampleRate(validSampleRate)
+                            .setChannelMask(channelMask)
                             .build()
                     )
                     
@@ -543,6 +601,9 @@ class SyncService : Service() {
                     val read = inputStream.read(buffer)
                     if (read == -1 || !isAudioStreaming) {
                         android.util.Log.i("SyncService", "Audio stream ended by server. Total bytes read: $totalBytesRead")
+                        if (totalBytesRead == 0L && isAudioStreaming) {
+                            notifyAudioStreamFailure(deviceId, "Audio stream closed by desktop before data was received.")
+                        }
                         break
                     }
                     totalBytesRead += read
@@ -560,6 +621,7 @@ class SyncService : Service() {
             } catch (e: Exception) {
                 if (isAudioStreaming) {
                     android.util.Log.e("SyncService", "Audio stream encountered an error", e)
+                    notifyAudioStreamFailure(deviceId, "Audio stream connection error: ${e.localizedMessage ?: "Connection failed"}")
                 }
             } finally {
                 val trackToRelease = audioTrack
@@ -596,7 +658,10 @@ class SyncService : Service() {
             }
             trackToRelease?.release()
         } catch (_: Exception) {}
-        updateNotification("Sync Active")
+        
+        Handler(Looper.getMainLooper()).post {
+            updateNotification("Listening for devices...")
+        }
     }
 
     private fun handleConnectorEvent(event: SyncConnector.Event) {
@@ -648,6 +713,31 @@ class SyncService : Service() {
             }
             is SyncConnector.Event.StopCameraStream -> {
                 stopCameraStream()
+                return
+            }
+            is SyncConnector.Event.UpdateCameraConfig -> {
+                val prefs = getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+                val editor = prefs.edit()
+                event.isFront?.let { editor.putBoolean("camera_facing_front", it) }
+                event.resolution?.let { editor.putString("camera_resolution", it) }
+                event.fps?.let { editor.putInt("camera_fps", it) }
+                event.rotation?.let { editor.putInt("camera_rotation", it) }
+                event.useAdb?.let { editor.putString("camera_connection_mode", if (it) "adb" else "wifi") }
+                editor.apply()
+
+                androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(android.content.Intent(ACTION_STATE_CHANGED))
+
+                val currentIsFront = prefs.getBoolean("camera_facing_front", false)
+                val currentRes = prefs.getString("camera_resolution", "1920x1080") ?: "1920x1080"
+                val currentFps = prefs.getInt("camera_fps", 30)
+                val currentRot = prefs.getInt("camera_rotation", 0)
+                val currentAdb = prefs.getString("camera_connection_mode", "wifi") == "adb"
+                connector.sendCameraConfigState(currentIsFront, currentRes, currentFps, currentRot, currentAdb)
+
+                if (cameraServer != null) {
+                    stopCameraStream()
+                    startCameraStream()
+                }
                 return
             }
             is SyncConnector.Event.StartMicStream -> {

@@ -12,10 +12,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.ImageViewCompat
 import androidx.activity.enableEdgeToEdge
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sols.sync.R
 import sols.sync.SyncApp
 import sols.sync.network.model.BroadcastMessage
@@ -60,11 +62,25 @@ class DeviceDetailActivity : AppCompatActivity() {
         uri?.let { handleSelectedFile(it) }
     }
 
-
-
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             updateUi()
+        }
+    }
+
+    private val audioErrorReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val errorDeviceId = intent?.getStringExtra(SyncService.EXTRA_DEVICE_ID)
+            val errorMessage = intent?.getStringExtra(SyncService.EXTRA_ERROR_MESSAGE) ?: "Audio streaming failed"
+            if (errorDeviceId == null || errorDeviceId == deviceId) {
+                val switchAudioStream = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switch_audio_stream)
+                switchAudioStream?.isChecked = false
+                MaterialAlertDialogBuilder(this@DeviceDetailActivity)
+                    .setTitle("Listen Through Mobile Error")
+                    .setMessage(errorMessage)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
         }
     }
 
@@ -196,6 +212,18 @@ class DeviceDetailActivity : AppCompatActivity() {
         val switchAudioStream = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switch_audio_stream)
         switchAudioStream.isChecked = prefs.getBoolean("audio_stream_enabled_$deviceId", false)
         switchAudioStream.setOnCheckedChangeListener { _, isChecked ->
+            val app = applicationContext as SyncApp
+            val state = app.deviceStates[deviceId] ?: "Disconnected"
+            if (isChecked && state != "Connected") {
+                switchAudioStream.isChecked = false
+                prefs.edit().putBoolean("audio_stream_enabled_$deviceId", false).apply()
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Device Offline")
+                    .setMessage("Cannot start audio streaming because this device is not connected.")
+                    .setPositiveButton("OK", null)
+                    .show()
+                return@setOnCheckedChangeListener
+            }
             prefs.edit().putBoolean("audio_stream_enabled_$deviceId", isChecked).apply()
             val intent = Intent(this, SyncService::class.java).apply {
                 action = if (isChecked) SyncService.ACTION_START_AUDIO_STREAM else SyncService.ACTION_STOP_AUDIO_STREAM
@@ -209,8 +237,6 @@ class DeviceDetailActivity : AppCompatActivity() {
             AudioSettingsActivity.start(this, deviceId)
         }
 
-
-
         btnUnpair.setOnClickListener { confirmUnpair(deviceId) }
     }
 
@@ -220,11 +246,16 @@ class DeviceDetailActivity : AppCompatActivity() {
             stateReceiver,
             IntentFilter(SyncService.ACTION_STATE_CHANGED)
         )
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            audioErrorReceiver,
+            IntentFilter(SyncService.ACTION_AUDIO_STREAM_ERROR)
+        )
         updateUi()
     }
 
     override fun onStop() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(stateReceiver)
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(audioErrorReceiver)
         super.onStop()
     }
 
@@ -235,12 +266,31 @@ class DeviceDetailActivity : AppCompatActivity() {
             return
         }
 
+        val prefs = getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+        val switchAudioStream = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switch_audio_stream)
+        val audioEnabled = prefs.getBoolean("audio_stream_enabled_$deviceId", false)
+        if (switchAudioStream != null && switchAudioStream.isChecked != audioEnabled) {
+            switchAudioStream.isChecked = audioEnabled
+        }
+
         val discoveredCache = (applicationContext as? SyncApp)?.discoveredCache
         val liveDevice: BroadcastMessage? = discoveredCache?.get(deviceId)
         val app = applicationContext as SyncApp
         val deviceStates = app.deviceStates
 
-        populateUi(peer.name, peer.deviceId, peer.os, liveDevice, deviceStates)
+        val resolvedOs = if (peer.os.isBlank() || peer.os.lowercase() == "unknown") {
+            val detectedOs = liveDevice?.os?.takeIf { it.isNotBlank() && it.lowercase() != "unknown" }
+            if (detectedOs != null) {
+                trustedPeersStore.put(peer.copy(os = detectedOs))
+                detectedOs
+            } else {
+                peer.os
+            }
+        } else {
+            liveDevice?.os?.takeIf { it.isNotBlank() && it.lowercase() != "unknown" } ?: peer.os
+        }
+
+        populateUi(peer.name, peer.deviceId, resolvedOs, liveDevice, deviceStates)
 
         val btnTerminal = findViewById<android.view.View>(R.id.btn_quick_action_terminal)
         val tvTerminalStatus = findViewById<TextView>(R.id.tv_terminal_status)
@@ -289,8 +339,15 @@ class DeviceDetailActivity : AppCompatActivity() {
         // OS icon
         val iconRes = getOsIconResource(os)
         iconView.setImageResource(iconRes)
-        if (iconRes != R.drawable.ic_desktop) {
+        if (iconRes == R.drawable.ic_desktop) {
+            val typedValue = android.util.TypedValue()
+            theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimaryContainer, typedValue, true)
+            ImageViewCompat.setImageTintList(iconView, android.content.res.ColorStateList.valueOf(typedValue.data))
+        } else {
+            ImageViewCompat.setImageTintList(iconView, null)
             iconView.imageTintList = null
+            iconView.colorFilter = null
+            iconView.clearColorFilter()
         }
         osView.text = os.replaceFirstChar { it.uppercase() }.ifBlank { "Unknown" }
 
@@ -340,10 +397,11 @@ class DeviceDetailActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun getOsIconResource(os: String): Int {
-        return when (os.lowercase()) {
-            "windows" -> R.drawable.ic_windows
-            "macos", "darwin" -> R.drawable.ic_mac
+    private fun getOsIconResource(os: String?): Int {
+        if (os.isNullOrBlank()) return R.drawable.ic_desktop
+        return when (os.trim().lowercase()) {
+            "windows", "win32", "win64" -> R.drawable.ic_windows
+            "macos", "darwin", "mac" -> R.drawable.ic_mac
             "linux", "ubuntu" -> R.drawable.ic_ubuntu
             else -> R.drawable.ic_desktop
         }
