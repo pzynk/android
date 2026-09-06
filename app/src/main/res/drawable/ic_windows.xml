@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Microsoft Windows 4-color branded icon -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/apk/res-auto"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Top-Left: Red/Orange -->
     <path
-        android:pathData="M 4,2 h 5 a 2,2 0 0 1 2,2 v 5 a 2,2 0 0 1 -2,2 h -5 a 2,2 0 0 1 -2,-2 v -5 a 2,2 0 0 1 2,-2 z M 15,2 h 5 a 2,2 0 0 1 2,2 v 5 a 2,2 0 0 1 -2,2 h -5 a 2,2 0 0 1 -2,-2 v -5 a 2,2 0 0 1 2,-2 z M 4,13 h 5 a 2,2 0 0 1 2,2 v 5 a 2,2 0 0 1 -2,2 h -5 a 2,2 0 0 1 -2,-2 v -5 a 2,2 0 0 1 2,-2 z M 15,13 h 5 a 2,2 0 0 1 2,2 v 5 a 2,2 0 0 1 -2,2 h -5 a 2,2 0 0 1 -2,-2 v -5 a 2,2 0 0 1 2,-2 z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="2"
-                android:startY="2"
-                android:endX="22"
-                android:endY="22"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#2196F3"/>
-                <item android:offset="0.5" android:color="#9C27B0"/>
-                <item android:offset="1.0" android:color="#E91E63"/>
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:fillColor="#F25022"
+        android:pathData="M 4.5,3 h 5 a 1.5,1.5 0 0 1 1.5,1.5 v 5 a 1.5,1.5 0 0 1 -1.5,1.5 h -5 a 1.5,1.5 0 0 1 -1.5,-1.5 v -5 a 1.5,1.5 0 0 1 1.5,-1.5 z" />
+    
+    <!-- Top-Right: Green -->
+    <path
+        android:fillColor="#7FBA00"
+        android:pathData="M 14.5,3 h 5 a 1.5,1.5 0 0 1 1.5,1.5 v 5 a 1.5,1.5 0 0 1 -1.5,1.5 h -5 a 1.5,1.5 0 0 1 -1.5,-1.5 v -5 a 1.5,1.5 0 0 1 1.5,-1.5 z" />
+
+    <!-- Bottom-Left: Blue -->
+    <path
+        android:fillColor="#00A4EF"
+        android:pathData="M 4.5,13 h 5 a 1.5,1.5 0 0 1 1.5,1.5 v 5 a 1.5,1.5 0 0 1 -1.5,1.5 h -5 a 1.5,1.5 0 0 1 -1.5,-1.5 v -5 a 1.5,1.5 0 0 1 1.5,-1.5 z" />
+
+    <!-- Bottom-Right: Yellow -->
+    <path
+        android:fillColor="#FFB900"
+        android:pathData="M 14.5,13 h 5 a 1.5,1.5 0 0 1 1.5,1.5 v 5 a 1.5,1.5 0 0 1 -1.5,1.5 h -5 a 1.5,1.5 0 0 1 -1.5,-1.5 v -5 a 1.5,1.5 0 0 1 1.5,-1.5 z" />
 </vector>

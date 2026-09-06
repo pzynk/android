@@ -63,6 +63,13 @@ class SyncConnector(
         object StartMicStream : Event()
         object StopMicStream : Event()
         data class AudioStreamInfo(val device: BroadcastMessage, val enabled: Boolean, val port: Int) : Event()
+        data class UpdateCameraConfig(
+            val isFront: Boolean?,
+            val resolution: String?,
+            val fps: Int?,
+            val rotation: Int?,
+            val useAdb: Boolean?
+        ) : Event()
     }
 
     private val appContext = context.applicationContext
@@ -196,6 +203,12 @@ class SyncConnector(
         return active.writeLine(payload)
     }
 
+    fun sendCameraConfigState(isFront: Boolean, resolution: String, fps: Int, rotation: Int, useAdb: Boolean): Boolean {
+        val payload = ClientMessage.CameraConfigState(isFront, resolution, fps, rotation, useAdb).toJson()
+        val active = activeConnections.values.firstOrNull() ?: return false
+        return active.writeLine(payload)
+    }
+
     fun sendMicStreamStarted(port: Int, sampleRate: Int = 44100, channels: Int = 1, useAdb: Boolean = false): Boolean {
         val payload = ClientMessage.MicStreamStarted(port, sampleRate, channels, useAdb).toJson()
         val active = activeConnections.values.firstOrNull() ?: return false
@@ -250,6 +263,17 @@ class SyncConnector(
 
     private fun monitorConnection(device: BroadcastMessage, tcp: TcpClient) {
         try {
+            // Send initial camera config state on connection
+            try {
+                val prefs = appContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+                val isFront = prefs.getBoolean("camera_facing_front", false)
+                val res = prefs.getString("camera_resolution", "1920x1080") ?: "1920x1080"
+                val fps = prefs.getInt("camera_fps", 30)
+                val rot = prefs.getInt("camera_rotation", 0)
+                val useAdb = prefs.getString("camera_connection_mode", "wifi") == "adb"
+                tcp.writeLine(ClientMessage.CameraConfigState(isFront, res, fps, rot, useAdb).toJson())
+            } catch (_: Exception) {}
+
             while (tcp.isConnected) {
                 val line = tcp.readLine() ?: break
                 when (val msg = ServerMessage.parse(line)) {
@@ -300,11 +324,11 @@ class SyncConnector(
                                     val receivedSha256 = tcp.readIncomingFileStreaming(
                                         msg.totalBytes,
                                         onProgress = { readBytes ->
-                                            val pct = ((readBytes * 100) / msg.totalBytes).toInt()
-                                            if (pct != lastPercent) {
-                                                lastPercent = pct
-                                                listener(Event.FileTransferProgress(device, file.name, readBytes, msg.totalBytes))
-                                            }
+                                             val pct = ((readBytes * 100) / msg.totalBytes).toInt()
+                                             if (pct != lastPercent) {
+                                                 lastPercent = pct
+                                                 listener(Event.FileTransferProgress(device, file.name, readBytes, msg.totalBytes))
+                                             }
                                         },
                                         onWriteBytes = { bytes, len ->
                                             out.write(bytes, 0, len)
@@ -349,6 +373,18 @@ class SyncConnector(
                     }
                     is ServerMessage.StopCameraStream -> {
                         listener(Event.StopCameraStream)
+                    }
+                    is ServerMessage.UpdateCameraConfig -> {
+                        listener(Event.UpdateCameraConfig(msg.isFront, msg.resolution, msg.fps, msg.rotation, msg.useAdb))
+                    }
+                    is ServerMessage.RequestCameraConfig -> {
+                        val prefs = appContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
+                        val isFront = prefs.getBoolean("camera_facing_front", false)
+                        val res = prefs.getString("camera_resolution", "1920x1080") ?: "1920x1080"
+                        val fps = prefs.getInt("camera_fps", 30)
+                        val rot = prefs.getInt("camera_rotation", 0)
+                        val useAdb = prefs.getString("camera_connection_mode", "wifi") == "adb"
+                        sendCameraConfigState(isFront, res, fps, rot, useAdb)
                     }
                     is ServerMessage.StartMicStream -> {
                         listener(Event.StartMicStream)

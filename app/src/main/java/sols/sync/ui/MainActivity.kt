@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.ImageViewCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.card.MaterialCardView
 import sols.sync.R
@@ -196,13 +197,19 @@ class MainActivity : AppCompatActivity() {
                 }
                 
                 // Set OS-specific icon
-                val os = disc?.os ?: peer.os
-                val iconView = itemView.findViewById<ImageView>(R.id.device_icon)
-                val osIcon = getOsIconResource(os)
-                iconView.setImageResource(osIcon)
-                if (osIcon != R.drawable.ic_desktop) {
-                    iconView.imageTintList = null
+                val os = if (peer.os.isBlank() || peer.os.lowercase() == "unknown") {
+                    val detectedOs = disc?.os?.takeIf { it.isNotBlank() && it.lowercase() != "unknown" }
+                    if (detectedOs != null) {
+                        trustedPeersStore.put(peer.copy(os = detectedOs))
+                        detectedOs
+                    } else {
+                        peer.os
+                    }
+                } else {
+                    disc?.os?.takeIf { it.isNotBlank() && it.lowercase() != "unknown" } ?: peer.os
                 }
+                val iconView = itemView.findViewById<ImageView>(R.id.device_icon)
+                applyDeviceIcon(iconView, os)
 
                 // Tap → open device detail screen
                 val peerId = peer.deviceId
@@ -252,11 +259,7 @@ class MainActivity : AppCompatActivity() {
                 
                 // Set OS-specific icon
                 val iconView = itemView.findViewById<ImageView>(R.id.device_icon)
-                val osIcon = getOsIconResource(d.os)
-                iconView.setImageResource(osIcon)
-                if (osIcon != R.drawable.ic_desktop) {
-                    iconView.imageTintList = null
-                }
+                applyDeviceIcon(iconView, d.os)
                 
                 itemView.setOnClickListener {
                     val intent = Intent(this, SyncService::class.java).apply {
@@ -275,10 +278,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getOsIconResource(os: String): Int {
-        return when (os.lowercase()) {
-            "windows" -> R.drawable.ic_windows
-            "macos", "darwin" -> R.drawable.ic_mac
+    private fun applyDeviceIcon(iconView: ImageView, os: String?) {
+        val osIcon = getOsIconResource(os)
+        iconView.setImageResource(osIcon)
+        if (osIcon == R.drawable.ic_desktop) {
+            val typedValue = android.util.TypedValue()
+            theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimaryContainer, typedValue, true)
+            ImageViewCompat.setImageTintList(iconView, android.content.res.ColorStateList.valueOf(typedValue.data))
+        } else {
+            ImageViewCompat.setImageTintList(iconView, null)
+            iconView.imageTintList = null
+            iconView.colorFilter = null
+            iconView.clearColorFilter()
+        }
+    }
+
+    private fun getOsIconResource(os: String?): Int {
+        if (os.isNullOrBlank()) return R.drawable.ic_desktop
+        return when (os.trim().lowercase()) {
+            "windows", "win32", "win64" -> R.drawable.ic_windows
+            "macos", "darwin", "mac" -> R.drawable.ic_mac
             "linux", "ubuntu" -> R.drawable.ic_ubuntu
             else -> R.drawable.ic_desktop
         }

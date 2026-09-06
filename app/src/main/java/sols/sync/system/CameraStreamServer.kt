@@ -275,12 +275,12 @@ class CameraStreamServer(
     private fun handleClient(socket: Socket) {
         Thread {
             try {
-                // Set temporary read timeout to prevent slow or malicious connections holding open socket thread forever
+                socket.tcpNoDelay = true
+                socket.sendBufferSize = 524288
                 socket.soTimeout = 5000
                 val input = socket.getInputStream().bufferedReader()
                 val line = input.readLine() ?: return@Thread
                 if (line.startsWith("GET")) {
-                    // Reset read timeout as we won't read from this socket anymore
                     socket.soTimeout = 0
                     val client = ClientHandler(socket)
                     clients.add(client)
@@ -300,10 +300,10 @@ class CameraStreamServer(
         while (iterator.hasNext()) {
             val client = iterator.next()
             
-            // Watchdog check: if client has been writing a frame for too long, they have a low quality connection.
+            // Watchdog check: only disconnect if client write has been blocked for > 15 seconds
             val writeStart = client.lastWriteStart
-            if (writeStart > 0 && (now - writeStart > 1500)) {
-                Log.w(TAG, "Client write timed out (low quality connection), disconnecting: ${client.socket.remoteSocketAddress}")
+            if (writeStart > 0 && (now - writeStart > 15000)) {
+                Log.w(TAG, "Client write timed out (>15s), disconnecting: ${client.socket.remoteSocketAddress}")
                 client.stop()
                 iterator.remove()
                 continue
@@ -320,7 +320,7 @@ class CameraStreamServer(
     }
 
     class ClientHandler(val socket: Socket) {
-        private val queue = java.util.concurrent.LinkedBlockingQueue<ByteArray>(2)
+        private val queue = java.util.concurrent.LinkedBlockingQueue<ByteArray>(1)
         private var thread: Thread? = null
         @Volatile var isRunning = true
         @Volatile var lastWriteStart: Long = 0
@@ -328,28 +328,28 @@ class CameraStreamServer(
         init {
             thread = Thread {
                 try {
-                    val out = socket.getOutputStream()
+                    val out = java.io.BufferedOutputStream(socket.getOutputStream(), 65536)
                     // Write HTTP headers
                     out.write(
                         ("HTTP/1.1 200 OK\r\n" +
                          "Content-Type: multipart/x-mixed-replace; boundary=frame\r\n" +
                          "Connection: close\r\n" +
                          "Pragma: no-cache\r\n" +
-                         "Cache-Control: no-cache, private\r\n\r\n").toByteArray()
+                         "Cache-Control: no-cache, no-store, must-revalidate\r\n\r\n").toByteArray()
                     )
+                    out.flush()
 
-                    val boundary = "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ".toByteArray()
-                    val mid = "\r\n\r\n".toByteArray()
-                    val suffix = "\r\n\r\n".toByteArray()
+                    val boundaryPrefix = "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ".toByteArray()
+                    val crlf2 = "\r\n\r\n".toByteArray()
 
                     while (isRunning) {
-                        val jpeg = queue.take() // Blocks if empty
+                        val jpeg = queue.poll(100, java.util.concurrent.TimeUnit.MILLISECONDS) ?: continue
                         lastWriteStart = System.currentTimeMillis()
-                        out.write(boundary)
+                        out.write(boundaryPrefix)
                         out.write(jpeg.size.toString().toByteArray())
-                        out.write(mid)
+                        out.write(crlf2)
                         out.write(jpeg)
-                        out.write(suffix)
+                        out.write(crlf2)
                         out.flush()
                         lastWriteStart = 0
                     }
@@ -363,9 +363,10 @@ class CameraStreamServer(
         }
 
         fun offerFrame(jpeg: ByteArray) {
-            while (!queue.offer(jpeg)) {
+            while (queue.size >= 1) {
                 queue.poll()
             }
+            queue.offer(jpeg)
         }
 
         fun stop() {

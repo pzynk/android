@@ -37,6 +37,13 @@ sealed class ClientMessage {
     object MicStreamStopped : ClientMessage()
     data class AudioStreamRequest(val start: Boolean) : ClientMessage()
     data class ClipboardImage(val base64Data: String) : ClientMessage()
+    data class CameraConfigState(
+        val isFront: Boolean,
+        val resolution: String,
+        val fps: Int,
+        val rotation: Int,
+        val useAdb: Boolean
+    ) : ClientMessage()
 
     fun toJson(): String {
         val json = JSONObject()
@@ -102,6 +109,14 @@ sealed class ClientMessage {
                 json.put("type", "AudioStreamRequest")
                 json.put("start", start)
             }
+            is CameraConfigState -> {
+                json.put("type", "CameraConfigState")
+                json.put("is_front", isFront)
+                json.put("resolution", resolution)
+                json.put("fps", fps)
+                json.put("rotation", rotation)
+                json.put("use_adb", useAdb)
+            }
         }
         return json.toString()
     }
@@ -141,6 +156,14 @@ sealed class ServerMessage {
     object StartMicStream : ServerMessage()
     object StopMicStream : ServerMessage()
     data class AudioStreamInfo(val enabled: Boolean, val port: Int) : ServerMessage()
+    data class UpdateCameraConfig(
+        val isFront: Boolean?,
+        val resolution: String?,
+        val fps: Int?,
+        val rotation: Int?,
+        val useAdb: Boolean?
+    ) : ServerMessage()
+    object RequestCameraConfig : ServerMessage()
 
     companion object {
         fun parse(line: String): ServerMessage? {
@@ -197,6 +220,14 @@ sealed class ServerMessage {
                         enabled = json.getBoolean("enabled"),
                         port = json.getInt("port")
                     )
+                    "UpdateCameraConfig" -> UpdateCameraConfig(
+                        isFront = if (json.has("is_front") && !json.isNull("is_front")) json.getBoolean("is_front") else null,
+                        resolution = if (json.has("resolution") && !json.isNull("resolution")) json.getString("resolution") else null,
+                        fps = if (json.has("fps") && !json.isNull("fps")) json.getInt("fps") else null,
+                        rotation = if (json.has("rotation") && !json.isNull("rotation")) json.getInt("rotation") else null,
+                        useAdb = if (json.has("use_adb") && !json.isNull("use_adb")) json.getBoolean("use_adb") else null
+                    )
+                    "RequestCameraConfig" -> RequestCameraConfig
                     else -> null
                 }
             } catch (_: Exception) {

@@ -58,7 +58,7 @@ class PairingSession(
             is ServerMessage.StopMicStream -> Result.Failed("Unexpected StopMicStream")
             is ServerMessage.AudioStreamInfo -> Result.Failed("Unexpected AudioStreamInfo")
             is ServerMessage.Unpair -> Result.Failed("Unexpected Unpair")
-            null -> Result.Failed("Desktop closed the connection")
+            else -> Result.Failed("Unexpected message during handshake")
         }
     }
  
@@ -81,19 +81,7 @@ class PairingSession(
             is ServerMessage.PairRejected -> Result.PairRejected(response.reason)
             is ServerMessage.HelloOk -> Result.Connected(pairedBefore = false)
             is ServerMessage.PairRequired -> Result.Failed("Desktop requested pairing again")
-            is ServerMessage.ClipboardUpdate -> Result.Failed("Unexpected ClipboardUpdate")
-            is ServerMessage.IncomingFile -> Result.Failed("Unexpected IncomingFile")
-            is ServerMessage.FileTransferStart -> Result.Failed("Unexpected FileTransferStart")
-            is ServerMessage.MediaState -> Result.Failed("Unexpected MediaState")
-            is ServerMessage.SystemVolumeUpdate -> Result.Failed("Unexpected SystemVolumeUpdate")
-            is ServerMessage.TerminalServerInfo -> Result.Failed("Unexpected TerminalServerInfo")
-            is ServerMessage.StartCameraStream -> Result.Failed("Unexpected StartCameraStream")
-            is ServerMessage.StopCameraStream -> Result.Failed("Unexpected StopCameraStream")
-            is ServerMessage.StartMicStream -> Result.Failed("Unexpected StartMicStream")
-            is ServerMessage.StopMicStream -> Result.Failed("Unexpected StopMicStream")
-            is ServerMessage.AudioStreamInfo -> Result.Failed("Unexpected AudioStreamInfo")
-            is ServerMessage.Unpair -> Result.Failed("Unexpected Unpair")
-            null -> Result.Failed("Desktop closed before pairing completed")
+            else -> Result.Failed("Unexpected message during pairing")
         }
     }
 

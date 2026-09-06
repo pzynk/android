@@ -111,36 +111,43 @@ class MicStreamServer(
         }.apply { start() }
 
         recordThread = Thread {
-            record.startRecording()
-            val pcmBuffer = ByteArray(bufferSize)
+            try {
+                record.startRecording()
+                val pcmBuffer = ByteArray(bufferSize)
 
-            while (isRunning) {
-                val readBytes = record.read(pcmBuffer, 0, pcmBuffer.size)
-                if (readBytes > 0) {
-                    val iterator = activeClients.iterator()
-                    while (iterator.hasNext()) {
-                        val client = iterator.next()
-                        try {
-                            val out = client.getOutputStream()
-                            out.write(pcmBuffer, 0, readBytes)
-                            out.flush()
-                        } catch (_: Exception) {
-                            try { client.close() } catch (_: Exception) {}
-                            iterator.remove()
+                while (isRunning) {
+                    val readBytes = record.read(pcmBuffer, 0, pcmBuffer.size)
+                    if (readBytes > 0 && isRunning) {
+                        val iterator = activeClients.iterator()
+                        while (iterator.hasNext()) {
+                            val client = iterator.next()
+                            try {
+                                val out = client.getOutputStream()
+                                out.write(pcmBuffer, 0, readBytes)
+                                out.flush()
+                            } catch (_: Exception) {
+                                try { client.close() } catch (_: Exception) {}
+                                iterator.remove()
+                            }
                         }
                     }
                 }
+            } catch (_: Exception) {
+            } finally {
+                try {
+                    record.stop()
+                } catch (_: Exception) {}
             }
-
-            try {
-                record.stop()
-            } catch (_: Exception) {}
         }.apply { start() }
     }
 
     fun stop() {
         if (!isRunning) return
         isRunning = false
+
+        try {
+            audioRecord?.stop()
+        } catch (_: Exception) {}
 
         try {
             serverSocket?.close()
@@ -151,6 +158,16 @@ class MicStreamServer(
             try { client.close() } catch (_: Exception) {}
         }
         activeClients.clear()
+
+        try {
+            recordThread?.interrupt()
+            recordThread = null
+        } catch (_: Exception) {}
+
+        try {
+            serverThread?.interrupt()
+            serverThread = null
+        } catch (_: Exception) {}
 
         try {
             noiseSuppressor?.release()
