@@ -8,10 +8,14 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -105,6 +109,15 @@ class SyncService : Service() {
     // MediaSessionCompat for desktop system master volume control
     private var systemVolumeSessionCompat: MediaSessionCompat? = null
  
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                Intent.ACTION_SCREEN_OFF -> connector.pauseDiscovery()
+                Intent.ACTION_SCREEN_ON -> connector.resumeDiscovery()
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -116,6 +129,12 @@ class SyncService : Service() {
         connector = SyncConnector(this) { event ->
             handleConnectorEvent(event)
         }
+        
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        registerReceiver(screenStateReceiver, filter)
         
         val prefs = getSharedPreferences("sync_prefs", Context.MODE_PRIVATE)
         isAutoSyncEnabled = prefs.getBoolean("clipboard_auto_sync", false)
@@ -316,6 +335,7 @@ class SyncService : Service() {
         systemVolumeSessionCompat?.release()
         volumeProvider = null
         dismissMediaNotification()
+        try { unregisterReceiver(screenStateReceiver) } catch (e: Exception) {}
         super.onDestroy()
     }
 
@@ -894,22 +914,45 @@ class SyncService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val app = application as? SyncApp
             val isCameraActive = app?.isCameraStreaming == true
+            val isMicActive = app?.isMicStreaming == true
+            
             var type = 0
-            if (Build.VERSION.SDK_INT >= 34) {
+            if (Build.VERSION.SDK_INT >= 34) { // Android 14+
                 type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
             }
-            if (isCameraActive) {
+            
+            // Only add types if we actually have the permission, otherwise startForeground crashes on Android 14+
+            if (isCameraActive && ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
             }
+            
+            if (isMicActive && ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            
             try {
                 if (type != 0) {
                     startForeground(NOTIFICATION_ID, notification, type)
                 } else {
-                    startForeground(NOTIFICATION_ID, notification)
+                    // Fallback for Android 14+ still requires at least one type if declared in manifest
+                    if (Build.VERSION.SDK_INT >= 34) {
+                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+                    } else {
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("SyncService", "Failed to startForeground with type $type", e)
-                startForeground(NOTIFICATION_ID, notification)
+                // Final fallback - try starting with just CONNECTED_DEVICE if 14+, or no type if older
+                if (Build.VERSION.SDK_INT >= 34) {
+                    try {
+                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+                    } catch (e2: Exception) {
+                        android.util.Log.e("SyncService", "Critical failure starting foreground service", e2)
+                    }
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
             }
         } else {
             startForeground(NOTIFICATION_ID, notification)
@@ -917,6 +960,15 @@ class SyncService : Service() {
     }
 
     private fun saveReceivedFile(filename: String, base64Data: String, expectedSha256: String) {
+        // Prevent OOM for extremely large files received via non-streaming method
+        if (base64Data.length > 50 * 1024 * 1024) { // 50MB Base64 limit (~37MB file)
+            android.util.Log.e("SyncService", "File too large for memory-based reception: $filename")
+            Handler(Looper.getMainLooper()).post {
+                android.widget.Toast.makeText(this, "File too large to receive (use streaming)", android.widget.Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+
         Thread {
             try {
                 val data = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)

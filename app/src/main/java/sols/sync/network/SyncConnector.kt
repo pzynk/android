@@ -10,8 +10,11 @@ import sols.sync.system.TrustedPeersStore
 import sols.sync.network.protocol.ClientMessage
 import sols.sync.network.protocol.ServerMessage
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
 
 /**
  * High-level façade that wires UDP discovery to the TCP client.
@@ -80,7 +83,7 @@ class SyncConnector(
     private val connecting = ConcurrentHashMap.newKeySet<String>()
     private val pairAttempted = ConcurrentHashMap.newKeySet<String>()
     private val activeConnections = ConcurrentHashMap<String, TcpClient>()
-    private var ioPool: ExecutorService = newIoPool()
+    private var ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val scanner = DiscoveryScanner(NetworkConfig.DISCOVERY_PORT) { device ->
         if (device.deviceId.isBlank()) {
@@ -93,14 +96,11 @@ class SyncConnector(
             listener(Event.DeviceDiscovered(device, paired))
         }
         if (shouldConnect(device.deviceId, paired)) {
-            ioPool.execute { connect(device) }
+            ioScope.launch { connect(device) }
         }
     }
 
     fun start() {
-        if (ioPool.isShutdown) {
-            ioPool = newIoPool()
-        }
         scanner.start()
     }
 
@@ -111,7 +111,17 @@ class SyncConnector(
         connecting.clear()
         discovered.clear()
         pairAttempted.clear()
-        ioPool.shutdownNow()
+        ioScope.cancel()
+    }
+    
+    fun pauseDiscovery() {
+        scanner.stop()
+    }
+
+    fun resumeDiscovery() {
+        if (activeConnections.isEmpty()) {
+            scanner.start()
+        }
     }
 
     /** Force a (re)connect to the given device. */
@@ -132,7 +142,10 @@ class SyncConnector(
                     activeConnections[device.deviceId]?.close()
                     activeConnections[device.deviceId] = tcp
                     listener(Event.Connected(device, result.pairedBefore))
-                    ioPool.execute {
+                    if (activeConnections.isNotEmpty()) {
+                        scanner.stop()
+                    }
+                    ioScope.launch {
                         monitorConnection(device, tcp)
                     }
                 }
@@ -155,9 +168,9 @@ class SyncConnector(
         val payload = ClientMessage.Unpair.toJson()
         val tcp = activeConnections[deviceId]
         if (tcp != null) {
-            ioPool.execute {
+            ioScope.launch {
                 tcp.writeLine(payload)
-                try { Thread.sleep(100) } catch (_: Exception) {}
+                try { kotlinx.coroutines.delay(100) } catch (_: Exception) {}
                 tcp.close()
             }
         }
@@ -167,7 +180,7 @@ class SyncConnector(
     fun sendClipboard(text: String) {
         val payload = ClientMessage.ClipboardUpdate(text).toJson()
         activeConnections.values.forEach { tcp ->
-            ioPool.execute {
+            ioScope.launch {
                 tcp.writeLine(payload)
             }
         }
@@ -176,7 +189,7 @@ class SyncConnector(
     fun sendClipboardImage(base64Data: String) {
         val payload = ClientMessage.ClipboardImage(base64Data).toJson()
         activeConnections.values.forEach { tcp ->
-            ioPool.execute {
+            ioScope.launch {
                 tcp.writeLine(payload)
             }
         }
@@ -185,7 +198,7 @@ class SyncConnector(
     fun sendMediaCommand(deviceId: String, command: String, value: Double? = null) {
         val payload = ClientMessage.MediaCommand(command, value).toJson()
         activeConnections[deviceId]?.let { tcp ->
-            ioPool.execute {
+            ioScope.launch {
                 tcp.writeLine(payload)
             }
         }
@@ -224,7 +237,7 @@ class SyncConnector(
     fun sendAudioStreamRequest(deviceId: String, start: Boolean) {
         val payload = ClientMessage.AudioStreamRequest(start).toJson()
         activeConnections[deviceId]?.let { tcp ->
-            ioPool.execute {
+            ioScope.launch {
                 tcp.writeLine(payload)
             }
         }
@@ -411,6 +424,9 @@ class SyncConnector(
         } finally {
             tcp.close()
             activeConnections.remove(device.deviceId)
+            if (activeConnections.isEmpty()) {
+                scanner.start()
+            }
             listener(Event.ConnectFailed(device, "Connection lost"))
         }
     }
@@ -419,12 +435,6 @@ class SyncConnector(
         if (connecting.contains(deviceId)) return false
         if (activeConnections[deviceId]?.isConnected == true) return false
         return paired
-    }
-
-    private fun newIoPool(): ExecutorService {
-        return Executors.newCachedThreadPool { r ->
-            Thread(r, "sync-connector-worker").apply { isDaemon = true }
-        }
     }
 
     private companion object {

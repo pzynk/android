@@ -33,5 +33,12 @@ class SyncApp : Application() {
         super.onCreate()
         // Apply Material You wallpaper-based dynamic color on Android 12+
         DynamicColors.applyToActivitiesIfAvailable(this)
+
+        // Basic UncaughtExceptionHandler to log crashes
+        val oldHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("SyncApp", "FATAL EXCEPTION in thread ${thread.name}", throwable)
+            oldHandler?.uncaughtException(thread, throwable)
+        }
     }
 }

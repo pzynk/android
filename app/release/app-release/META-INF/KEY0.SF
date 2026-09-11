@@ -1,35 +1,32 @@
 Signature-Version: 1.0
 Created-By: Signflinger
-SHA-256-Digest-Manifest: AC1bgGcSwuaaZpgCtCo2jC0X4lFWCw6lWb4GN5y+B4o=
+SHA-256-Digest-Manifest: 6wWOXmYVSvgHv7I1rqo6rad+9+W53k5EWKLlCXXARSE=
 
 Name: BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.prop
  erties
-SHA-256-Digest: grI6bjOlK5QiVhYg8vIZcZ8HQjt2+oDRmC2JY66RM4U=
+SHA-256-Digest: mKhNHTB93YtnCJtyrRne2+BuryP72qZQYI7Jpaih4po=
 
 Name: BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.p
  b
-SHA-256-Digest: IY331o7lH9jTzCJScwVsOkXGDHGRKuGIxXihGmAV3EA=
+SHA-256-Digest: JBnWDlS2Q0KjwsQwizpCHwphEIy7tDlQNj0UarRemvE=
 
 Name: BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof
-SHA-256-Digest: ugS9pjRt38Hj39yGYyRyv3DAzEmH2MCE/jv6yTHOz9I=
+SHA-256-Digest: HB7wVoXKmyD4aSuuC9wG1yS4CUex566hkO0xLiASP1Y=
 
 Name: BUNDLE-METADATA/com.android.tools.build.profiles/baseline.profm
-SHA-256-Digest: kiksva4vaLLtPTmUe3mrjo2sTa1ygKFcgiczT0h73Tg=
-
-Name: BUNDLE-METADATA/com.android.tools/d8.json
-SHA-256-Digest: +wMKHHTVaukWC1u2eD7LIKuT+If0AlMwXg+zvls/KZU=
+SHA-256-Digest: MPikChGlq/O+NQZypA56+ae3rRl5eU5Dfq7q19Y8Z0g=
 
 Name: BundleConfig.pb
-SHA-256-Digest: 5+1iqdl0SVPldM/AjREeTI8nBInxihI8PTcvPRshgXk=
+SHA-256-Digest: nMISgrXc93t1+vBRGGgM3GCgGDZOD/V9Feps+9kFjG8=
 
 Name: base/dex/classes.dex
-SHA-256-Digest: YeFN5NLkixiCISsbrWJLfRqRoTgm2uRkdMMUlZQ4Q88=
+SHA-256-Digest: uB4+hI9XpMgYqjLDy7B8U6VeWbkI5HrvVDvuJqDQPQs=
 
 Name: base/dex/classes2.dex
-SHA-256-Digest: sHcf2T/R/AwTP177ET5yLxpkbG0bP78aYRBlgj3avlw=
+SHA-256-Digest: LEecC0RLXgThIUYQay1o1iviBO3iiSGf34roURLh7Dw=
 
 Name: base/manifest/AndroidManifest.xml
-SHA-256-Digest: N4o76naDZ+J7XXoBM5jSBocU50i7X1Cl6KxYJeMciXs=
+SHA-256-Digest: AaXogN0FLQqt07ZKtoPnDHb/ICqum3p0Tgo3I+NljuA=
 
 Name: base/res/anim-v21/design_bottom_sheet_slide_in.xml
 SHA-256-Digest: GlVZVTp/MAtYbUSQ0e7hMfVPtcO4ql/twDnLU2/GpnQ=
@@ -2213,7 +2210,7 @@ Name: base/res/drawable/ic_m3_chip_close.xml
 SHA-256-Digest: /vhE/Iid1yj3bwnBA/3bNWGQX7wOS8Wh5URQPB4hpfQ=
 
 Name: base/res/drawable/ic_mac.xml
-SHA-256-Digest: qb4IWOoeVtAx094klJ5tH4ZkM4JiORiamgrssvT9Yc0=
+SHA-256-Digest: 7KziETwkewRP14/TvP7qy6HCRKpVOzCiJWyrTvJSFl4=
 
 Name: base/res/drawable/ic_mic.xml
 SHA-256-Digest: bueopiG3szk0I17W0weuiO+kTqQNmgUXOyv3GO8Obhg=
@@ -2285,7 +2282,7 @@ Name: base/res/drawable/ic_wifi_scan.xml
 SHA-256-Digest: va1/rPxIz6BPUk+18blgkNQVqXViKu8aFouVY3oGTCc=
 
 Name: base/res/drawable/ic_windows.xml
-SHA-256-Digest: YIKL8+35MqKtYZc0S5fIMALzAAeDMXqWLel8xiet5JM=
+SHA-256-Digest: QSh68IEMd/D/BgJQ1CZFG+L44zSYlcMTeHEf4TutHPY=
 
 Name: base/res/drawable/m3_avd_hide_password.xml
 SHA-256-Digest: m9++xOCMyJtdAYQpWz3dW5D32msWlzgZ66o2XBbcyNo=
@@ -2660,7 +2657,7 @@ Name: base/res/layout/activity_clipboard.xml
 SHA-256-Digest: W5G9LRCDKsArvHniOzjvEx7fqCk/GDU4Ir32NiDRVGA=
 
 Name: base/res/layout/activity_device_detail.xml
-SHA-256-Digest: TWhUaVq1pnpew+95aqObRTyi+A1zKw/Ice/U2ym++RA=
+SHA-256-Digest: jKajSPoBcr8XNYLzWHA208EBtAX7ovU9aKMUzs8haTg=
 
 Name: base/res/layout/activity_main.xml
 SHA-256-Digest: 4P770T9NjNwCKYD7XMSwZlduxVb//tNGVl2ISsrb7u4=
@@ -2738,7 +2735,7 @@ Name: base/res/layout/item_bottom_sheet_option.xml
 SHA-256-Digest: sbyyNuEL5RQHbaQFDOwsi5Kz+sYoft7J7pdadvGG0C8=
 
 Name: base/res/layout/item_device.xml
-SHA-256-Digest: 3fPlgWU9LhU9QBtq7MKX9S+rsuppKcmZ8t/3SAzmi38=
+SHA-256-Digest: A5e7qLYimsedVYiJKvz6iBu+KAFXoEibAPvQaxpLkaU=
 
 Name: base/res/layout/item_received_file.xml
 SHA-256-Digest: eSWCSv5ZrGIb3i51y6uZAVV5Uxpg8rAEo25GnJyGhmM=
@@ -3012,7 +3009,7 @@ Name: base/res/xml/file_paths.xml
 SHA-256-Digest: FjAodbd+JW2AKFreoCwOwSEe0ul2AsyDjvmY4RDg2M0=
 
 Name: base/resources.pb
-SHA-256-Digest: txQoxUWKyLNXY7zfZJTIJ/BIcoQlko7iOYo1FGpL77I=
+SHA-256-Digest: uHe1acfGl7Fx49dLMAc+DqvcDXQfrYe7lZuTv7B1P+I=
 
 Name: base/root/DebugProbesKt.bin
 SHA-256-Digest: Q6OhGjSxLz7EjpZ6kaHJZ9VbLzKvNgLhsSDyH28mrr4=
@@ -3183,7 +3180,7 @@ SHA-256-Digest: IFtdlAfix41UsvJWwr1ve6DMw9aSk9v3wdm5h+QotLE=
 
 Name: base/root/META-INF/com/android/build/gradle/app-metadata.propert
  ies
-SHA-256-Digest: cTkieiupZVYGSPOTsJJHuUzP7CO8XHln6bZyKFhnvKg=
+SHA-256-Digest: e0vBuQ2JqnPNGVuPsz33IEKiFXycUVazxw4BGphdSBs=
 
 Name: base/root/META-INF/kotlinx_coroutines_android.version
 SHA-256-Digest: va5W5yI56HqJtqXxpyczuVpBKe5gTcbJdauECujzfDc=
@@ -3203,7 +3200,7 @@ Name: base/root/META-INF/services/kotlinx.coroutines.internal.MainDisp
 SHA-256-Digest: c2XawPIZW8/CQqOa3kePO9D32XjpIm5CTUsgetWsq0Q=
 
 Name: base/root/META-INF/version-control-info.textproto
-SHA-256-Digest: weTpUFjk0pyJ7txvaXrX+rueuZsVCiq0dc+MJEb2hUA=
+SHA-256-Digest: t/u71vuxZZ6mnSFNQbkF9GNeJUOr7sk5kOw1MmPhDZ8=
 
 Name: base/root/firebase-analytics.properties
 SHA-256-Digest: Z3r8jXU8ie2gxvAsIfKhcGEfwvGLHPsijy33Un1X6Zg=
@@ -3221,28 +3218,25 @@ Name: base/root/firebase-measurement-connector.properties
 SHA-256-Digest: zf1yetWCxByE52csvhFQmaKNGKZp6qMHCw3y3rzyBkA=
 
 Name: base/root/kotlin/annotation/annotation.kotlin_builtins
-SHA-256-Digest: vy7OPyrmybR3zeE6CT+7LJWrMDjCOjG2/ZFI+xewZtI=
+SHA-256-Digest: O0SaKe1E5KBwmjikTXz6xyt8TG6jk6hEwAZvmQ5UqNs=
 
 Name: base/root/kotlin/collections/collections.kotlin_builtins
-SHA-256-Digest: hGfPypgr1EXt+o9LG8IlglK1sBJsStR25uHlwuBelXM=
-
-Name: base/root/kotlin/concurrent/atomics/atomics.kotlin_builtins
-SHA-256-Digest: Hbhwl7Mo/TffOW9pHtycCc4uJRFbUI/MTyp1OFiKzxE=
+SHA-256-Digest: g4i+PINKY3SkDHZuRJXiRxeyLyV2OIZkYpX74G9FKDI=
 
 Name: base/root/kotlin/coroutines/coroutines.kotlin_builtins
-SHA-256-Digest: SxdbQoU2BGbLihDFKXmB2ylmvewvlXTCi2AqcV7XGlQ=
+SHA-256-Digest: KNx1CeeGzLJFQCfQrG9DDucLd6yx0c8iA6D/fce+Q8Q=
 
 Name: base/root/kotlin/internal/internal.kotlin_builtins
-SHA-256-Digest: NwYEel99O5HCJ54zsQoVbXJkSJfA1qZhlgbra3IYUXw=
+SHA-256-Digest: Aov7lyAWtbnXsnbuh+8O6fvGoemyUxT4TrQl8W/3vEs=
 
 Name: base/root/kotlin/kotlin.kotlin_builtins
-SHA-256-Digest: pWddLAk0CzWBffcvREuptLQX2MgyClGUC2puXcMjdFw=
+SHA-256-Digest: adqJosfuVosgoKp4UzJVDYiPPEOKwo+7UStQWx0u0AI=
 
 Name: base/root/kotlin/ranges/ranges.kotlin_builtins
-SHA-256-Digest: 2xOJMlCcA7HmTLXQjBOcXC8NUlcIZjSTnXPvepmId2c=
+SHA-256-Digest: lY/MddU4pTiN/8A+/zDqMub93wIVUvtm7Hv6N27hCo8=
 
 Name: base/root/kotlin/reflect/reflect.kotlin_builtins
-SHA-256-Digest: qsxdL9qZDNP4r9Z/uFuxzZaxv1RMlFR/5VZULXojtrA=
+SHA-256-Digest: 52npPDjrO3+JVGyO9NX7+nCxGQonnRPF6ypmLfs/67o=
 
 Name: base/root/okhttp3/internal/publicsuffix/NOTICE
 SHA-256-Digest: Z8AM+PTUa4cCryX/zPoUGGHe6ZwkohON+3mwIgkfDa0=
